@@ -64,8 +64,25 @@ function MapGenerator:exportToFile(filename)
 end
 
 -- generate the map i.e. init the grid algorithmically
-function MapGenerator:doDrunkardsWalk()
+function MapGenerator:doDrunkardsWalk(w)
     -- TODO: drunkards walk
+    math.randomseed(os.time())
+    rand = math.random(1, 4)
+
+    print("Walker #: " .. w)
+    if rand == 1 then -- north
+        print("north")
+        self.walkers[w].y = self.walkers[w].y - 1
+    elseif rand == 2 then -- south
+        print("south")
+        self.walkers[w].y = self.walkers[w].y + 1
+    elseif rand == 3 then -- east
+        print("east")
+        self.walkers[w].x = self.walkers[w].x - 1
+    elseif rand == 4 then -- west
+        print("west")
+        self.walkers[w].x = self.walkers[w].x + 1
+    end
 end
 
 return MapGenerator
