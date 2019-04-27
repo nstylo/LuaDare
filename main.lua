@@ -34,7 +34,7 @@ function love.load()
 
     -- Generate map
     MapGenerator = require("MapGenerator")
-    mapgen = MapGenerator:new(100, 100, 5, 25)
+    mapgen = MapGenerator:new(200, 200, 10, 15)
     mapgen:doDrunkardsWalk(0.3)
     mapgen:exportToFile("test.txt")
 
@@ -57,6 +57,7 @@ function love.load()
                 objects.static.fixture = love.physics.newFixture(objects.static[key].body, objects.static[key].shape)
                 objects.static.fixture:setUserData("block")
             end
+            
         end
     end
 
@@ -187,10 +188,10 @@ function love.draw()
     love.graphics.circle("line", objects.head.body:getX() , objects.head.body:getY(), objects.head.shape:getRadius())
     love.graphics.polygon("line", objects.wpn.body:getWorldPoints(objects.wpn.shape:getPoints()))
 
-    local x_bound_min = objects.head.body:getX() - love.graphics.getWidth()
-    local y_bound_min = objects.head.body:getY() - love.graphics.getHeight()
-    local x_bound_max = objects.head.body:getX() + love.graphics.getWidth()
-    local y_bound_max = objects.head.body:getY() + love.graphics.getHeight()
+    local x_bound_min = objects.head.body:getX() - love.graphics.getWidth() / 2
+    local y_bound_min = objects.head.body:getY() - love.graphics.getHeight() / 2
+    local x_bound_max = objects.head.body:getX() + love.graphics.getWidth() / 2
+    local y_bound_max = objects.head.body:getY() + love.graphics.getHeight() / 2
 
     for i = 1, #objects.static do
         local rect_x, rect_y = objects.static[i].body:getPosition()
