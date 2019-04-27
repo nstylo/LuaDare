@@ -5,8 +5,6 @@ function love.load()
     world = love.physics.newWorld(0, 0, true)    
     world:setCallbacks(beginContact, endContact, preSolve, postSolve)
     objects = {}
-    x_vel = 500
-    y_vel = 500
 
     objects.head = {}
         objects.head.body = love.physics.newBody(world, 400, 200, "dynamic")
@@ -82,12 +80,12 @@ function love.update(dt)
     wpn_x, wpn_y = objects.wpn.body:getPosition()
     head_x, head_y = headbody:getPosition()
     
-    headbody:setLinearVelocity(getVelocity(x_cur, y_cur, kybrd))
+    headbody:setLinearVelocity(getPlayerVelocity(x_cur, y_cur, kybrd))
 
     --headbody:setLinearVelocity(-wpn_x + mouse_x, -wpn_y + mouse_y)
     --objects.wpn.body:setAngle(math.atan2(wpn_x - mouse_x, wpn_y - mouse_y))
     --headbody:setAngle(headbody:getAngle() - findangle(wpn_x - head_x, wpn_y - head_y, mouse_x - head_x, mouse_y - head_y))
-    headbody:setAngle(-1.5 + math.atan2(mouse_y - wpn_y, mouse_x - wpn_x)) 
+    headbody:setAngle(getPlayerAngle(mouse_x, mouse_y, wpn_x, wpn_y)) 
     --objects.wpn.body:setAngle(math.atan2(wpn_x - mouse_x, wpn_y - mouse_y))
 
     if kybrd.isDown("space") then
@@ -97,10 +95,11 @@ function love.update(dt)
         objects.bullet.b:setActive(true)
         objects.bullet.b:setLinearVelocity((wpn_x - head_x) * 10, 10 * (wpn_y - head_y))
         objects.bullet.b:applyForce((-1 * wpn_x + mouse_x) * 100, 100 * (-1 * wpn_y +  mouse_y))
-        headbody:applyForce((wpn_x - head_x) * 500, 500 * (wpn_y - head_y))
+        headbody:applyForce((wpn_x - head_x) * -500, -500 * (wpn_y - head_y))
     end
 
     headbody:setAngularVelocity(0)
+
     if string.len(text) > 0 then -- dont get too long babe
         text ="" 
     end
