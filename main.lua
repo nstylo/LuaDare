@@ -1,3 +1,5 @@
+require("player")
+
 function love.load()
     love.physics.setMeter(64)
     world = love.physics.newWorld(0, 0, true)    
@@ -8,13 +10,14 @@ function love.load()
 
     objects.head = {}
         objects.head.body = love.physics.newBody(world, 400, 200, "dynamic")
-        objects.head.body:setMass(1)
-        objects.head.body:setAngularVelocity(0)
-        objects.head.shape = love.physics.newCircleShape(30)
+        objects.head.body:setMass(0)
+        objects.head.body:setAngularVelocity(1)
+        objects.head.body:setFixedRotation(false)
+        objects.head.shape = love.physics.newCircleShape(20)
         objects.head.fixture = love.physics.newFixture(objects.head.body, objects.head.shape)
         objects.head.fixture:setRestitution(0)
         objects.head.fixture:setUserData("head")
-        objects.head.fixture:setFriction(1)
+        objects.head.body:setInertia(50)
 
     objects.wpn = {}
         objects.wpn.body = love.physics.newBody(world, 400, 230, "dynamic")
@@ -22,7 +25,7 @@ function love.load()
         objects.wpn.fixture = love.physics.newFixture(objects.wpn.body, objects.wpn.shape)
         objects.wpn.fixture:setUserData("Weapon")
     
-    player = love.physics.newWeldJoint(objects.wpn.body, objects.head.body, 400, 230)
+    player = love.physics.newWeldJoint(objects.head.body, objects.wpn.body, 400, 230)
     player:setDampingRatio(0)
 
     objects.static = {}
@@ -33,9 +36,9 @@ function love.load()
 
     objects.bullet = {} 
         objects.bullet.b = love.physics.newBody(world, 10, 10, "dynamic")
-        objects.bullet.s = love.physics.newCircleShape(5)
+        objects.bullet.s = love.physics.newCircleShape(10)
         objects.bullet.f = love.physics.newFixture(objects.bullet.b, objects.bullet.s)
-        objects.bullet.f:setRestitution(0.5)
+        objects.bullet.f:setRestitution(1)
         objects.bullet.f:setUserData("bullet")
         objects.bullet.b:setActive(false)
         objects.bullet.b:setBullet(true)
@@ -71,59 +74,43 @@ function love.update(dt)
 
     kybrd = love.keyboard
     headbody = objects.head.body
-
+    
     x_cur, y_cur = headbody:getLinearVelocity() -- current velocity
     y_changed = false -- if y velocity has changed
     x_changed = false -- if x velocity has changed
+    mouse_x, mouse_y = love.mouse.getPosition()
+    wpn_x, wpn_y = objects.wpn.body:getPosition()
+    head_x, head_y = headbody:getPosition()
+    
+    headbody:setLinearVelocity(getVelocity(x_cur, y_cur, kybrd))
 
-    if kybrd.isDown("up") then
-        headbody:setLinearVelocity(x_cur, -1 * y_vel) -- update velocity
-        headbody:setAngle(math.max(headbody:getAngle() - 0.2, -3.4))
-        y_changed = true -- we changed y
-    else -- up is released
-        headbody:setLinearVelocity(x_cur, 0) -- reset y velocity, leave x as previous
-    end
+    --headbody:setLinearVelocity(-wpn_x + mouse_x, -wpn_y + mouse_y)
+    --objects.wpn.body:setAngle(math.atan2(wpn_x - mouse_x, wpn_y - mouse_y))
+    --headbody:setAngle(headbody:getAngle() - findangle(wpn_x - head_x, wpn_y - head_y, mouse_x - head_x, mouse_y - head_y))
+    headbody:setAngle(-1.5 + math.atan2(mouse_y - wpn_y, mouse_x - wpn_x)) 
+    --objects.wpn.body:setAngle(math.atan2(wpn_x - mouse_x, wpn_y - mouse_y))
 
-    if kybrd.isDown("down") then
-        headbody:setLinearVelocity(x_cur, y_vel) -- update velocity
-        headbody:setAngle(math.max(headbody:getAngle() - 0.2, 0))
-    elseif not y_changed then -- down is not pressed and we havent changed y this frame
-        headbody:setLinearVelocity(x_cur, 0) -- reset y velocity
-    end
-
-    x_cur, y_cur = headbody:getLinearVelocity() -- get new velocity
-
-    -- similarly as for y velocity
-    if kybrd.isDown("left") then
-        headbody:setLinearVelocity(-1 * x_vel, y_cur)
-        headbody:setAngle(math.min(headbody:getAngle() + 0.2, 1.7))
-        x_changed = true
-    else
-        headbody:setLinearVelocity(0, y_cur)
-    end
-
-    if kybrd.isDown("right") then
-        headbody:setLinearVelocity(x_vel, y_cur)
-        headbody:setAngle(math.max(headbody:getAngle() - 0.2, -1.7))
-    elseif not x_changed then
-        headbody:setLinearVelocity(0, y_cur)
-    end
     if kybrd.isDown("space") then
         -- shoot
-
-        wpn_x, wpn_y = objects.wpn.body:getPosition()
-        head_x, head_y = headbody:getPosition()
         objects.bullet.b:setX(wpn_x)
         objects.bullet.b:setY(wpn_y)
         objects.bullet.b:setActive(true)
-        objects.bullet.b:setLinearVelocity((wpn_x - head_x) * 10, 10* (wpn_y - head_y))
-        objects.bullet.b:applyForce((wpn_x - head_x) * 100, 100 * (wpn_y - head_y))
+        objects.bullet.b:setLinearVelocity((wpn_x - head_x) * 10, 10 * (wpn_y - head_y))
+        objects.bullet.b:applyForce((-1 * wpn_x + mouse_x) * 100, 100 * (-1 * wpn_y +  mouse_y))
+        headbody:applyForce((wpn_x - head_x) * 500, 500 * (wpn_y - head_y))
     end
-    headbody:setAngularVelocity(0)
 
-    if string.len(text) > 768 then -- dont get too long babe
+    headbody:setAngularVelocity(0)
+    if string.len(text) > 0 then -- dont get too long babe
         text ="" 
     end
+end
+
+function findangle(x1, y1, x2, y2)
+    local dot_product = x1 * x2 + y1 * y2
+    local l1 = x1 * x1 + y1 * y1
+    local l2 = x2 * x2 + y2 * y2
+    return  math.acos(dot_product / (math.sqrt(l1) * math.sqrt(l2)))
 end
 
 function love.draw()
