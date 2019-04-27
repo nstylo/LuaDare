@@ -87,23 +87,18 @@ function love.update(dt)
 
 end
 
-function love.draw()
+function shakeScreen()
     if t > shakeDuration and #objects.bullets > 1 then
-        print("starting shake")
         startShake(1, 2)
     end
     if t < shakeDuration then
-        print("shaking")
         local dx = love.math.random(-shakeMagnitude, shakeMagnitude)
         local dy = love.math.random(-shakeMagnitude, shakeMagnitude)
         love.graphics.translate(dx, dy)
     end
-    love.graphics.circle("line", objects.head.body:getX() , objects.head.body:getY(), objects.head.shape:getRadius())
-    love.graphics.polygon("line", objects.wpn.body:getWorldPoints(objects.wpn.shape:getPoints()))
+end
 
-    if objects.static.b:isActive() then
-        love.graphics.polygon("line", objects.static.b:getWorldPoints(objects.static.s:getPoints()))
-    end
+function drawBullets()
     for i=#objects.bullets,1,-1 do
         local bullet_x, bullet_y = objects.bullets[i].b:getPosition()
         -- do nothing
@@ -115,4 +110,18 @@ function love.draw()
             love.graphics.circle("fill", objects.bullets[i].b:getX(), objects.bullets[i].b:getY(), objects.bullets[i].s:getRadius())
         end
     end
+end
+
+function love.draw()
+    shakeScreen()
+
+    love.graphics.circle("line", objects.head.body:getX() , objects.head.body:getY(), objects.head.shape:getRadius())
+    love.graphics.polygon("line", objects.wpn.body:getWorldPoints(objects.wpn.shape:getPoints()))
+
+    if objects.static.b:isActive() then
+        love.graphics.polygon("line", objects.static.b:getWorldPoints(objects.static.s:getPoints()))
+    end
+
+    drawBullets()
+
 end
