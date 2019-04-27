@@ -86,7 +86,11 @@ function MapGenerator:doDrunkardsWalk(w)
         walker.x = walker.x + 1
     end
 
-    self.grid[walker.x][walker.y] = 1
+    -- check if current grid index is a 0, if so, then change to 1 and increment counter
+    if self.grid[walker.x][walker.y] == 0 then
+        self.grid[walker.x][walker.y] = 1
+        self.numWalkPath = self.numWalkPath + 1 -- increment number of non 0s
+    end
 end
 
 return MapGenerator
