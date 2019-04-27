@@ -3,8 +3,9 @@ require("player")
 function love.load()
     love.physics.setMeter(64)
     world = love.physics.newWorld(0, 0, true)    
+    t, shakeDuration, shakeMagnitude = 0, -1, 0 
+
     objects = {}
-    
     objects.head = {}
         objects.head.body = love.physics.newBody(world, 400, 200, "dynamic")
         objects.head.body:setMass(0)
@@ -40,6 +41,10 @@ function love.load()
     mapgen:exportToFile("test.txt")
 end
 
+function startShake(duration, magnitude)
+    t, shakeDuration, shakeMagnitude = 0, duration or 1, magnitude or 5
+end
+
 function addBullet()
     bullet = {}
     bullet.b = love.physics.newBody(world, 10, 10, "dynamic")
@@ -54,6 +59,10 @@ end
 
 function love.update(dt)
     world:update(dt)    
+
+    if t < shakeDuration then
+        t = t + dt
+    end
 
     kybrd = love.keyboard
     headbody = objects.head.body
@@ -80,6 +89,16 @@ function love.update(dt)
 end
 
 function love.draw()
+    if t > shakeDuration and #objects.bullets > 1 then
+        print("starting shake")
+        startShake(1, 2)
+    end
+    if t < shakeDuration then
+        print("shaking")
+        local dx = love.math.random(-shakeMagnitude, shakeMagnitude)
+        local dy = love.math.random(-shakeMagnitude, shakeMagnitude)
+        love.graphics.translate(dx, dy)
+    end
     love.graphics.circle("line", objects.head.body:getX() , objects.head.body:getY(), objects.head.shape:getRadius())
     love.graphics.polygon("line", objects.wpn.body:getWorldPoints(objects.wpn.shape:getPoints()))
 
