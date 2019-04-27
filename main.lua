@@ -7,46 +7,47 @@ function love.load()
     objects = {}
 
     objects.head = {}
-        objects.head.body = love.physics.newBody(world, 400, 200, "dynamic")
-        objects.head.body:setMass(0)
-        objects.head.body:setAngularVelocity(1)
-        objects.head.body:setFixedRotation(false)
-        objects.head.shape = love.physics.newCircleShape(20)
-        objects.head.fixture = love.physics.newFixture(objects.head.body, objects.head.shape)
-        objects.head.fixture:setRestitution(0)
-        objects.head.fixture:setUserData("head")
-        objects.head.body:setInertia(50)
+    objects.head.body = love.physics.newBody(world, 400, 200, "dynamic")
+    objects.head.body:setMass(0)
+    objects.head.body:setAngularVelocity(1)
+    objects.head.body:setFixedRotation(false)
+    objects.head.shape = love.physics.newCircleShape(20)
+    objects.head.fixture = love.physics.newFixture(objects.head.body, objects.head.shape)
+    objects.head.fixture:setRestitution(0)
+    objects.head.fixture:setUserData("head")
+    objects.head.body:setInertia(50)
 
     objects.wpn = {}
-        objects.wpn.body = love.physics.newBody(world, 400, 230, "dynamic")
-        objects.wpn.shape = love.physics.newRectangleShape(5, 25)
-        objects.wpn.fixture = love.physics.newFixture(objects.wpn.body, objects.wpn.shape)
-        objects.wpn.fixture:setUserData("Weapon")
-    
+    objects.wpn.body = love.physics.newBody(world, 400, 230, "dynamic")
+    objects.wpn.shape = love.physics.newRectangleShape(5, 25)
+    objects.wpn.fixture = love.physics.newFixture(objects.wpn.body, objects.wpn.shape)
+    objects.wpn.fixture:setUserData("Weapon")
+
     player = love.physics.newWeldJoint(objects.head.body, objects.wpn.body, 400, 230)
     player:setDampingRatio(0)
 
     objects.static = {}
-        objects.static.b = love.physics.newBody(world, 400, 400, "static")
-        objects.static.s = love.physics.newRectangleShape(200,50)
-        objects.static.f = love.physics.newFixture(objects.static.b, objects.static.s)
-        objects.static.f:setUserData("Block")
+    objects.static.b = love.physics.newBody(world, 400, 400, "static")
+    objects.static.s = love.physics.newRectangleShape(200,50)
+    objects.static.f = love.physics.newFixture(objects.static.b, objects.static.s)
+    objects.static.f:setUserData("Block")
 
     objects.bullet = {} 
-        objects.bullet.b = love.physics.newBody(world, 10, 10, "dynamic")
-        objects.bullet.s = love.physics.newCircleShape(10)
-        objects.bullet.f = love.physics.newFixture(objects.bullet.b, objects.bullet.s)
-        objects.bullet.f:setRestitution(1)
-        objects.bullet.f:setUserData("bullet")
-        objects.bullet.b:setActive(false)
-        objects.bullet.b:setBullet(true)
+    objects.bullet.b = love.physics.newBody(world, 10, 10, "dynamic")
+    objects.bullet.s = love.physics.newCircleShape(10)
+    objects.bullet.f = love.physics.newFixture(objects.bullet.b, objects.bullet.s)
+    objects.bullet.f:setRestitution(1)
+    objects.bullet.f:setUserData("bullet")
+    objects.bullet.b:setActive(false)
+    objects.bullet.b:setBullet(true)
 
     text =""
     persisting = 0
 
     -- Generate map with 0s
     MapGenerator = require("MapGenerator")
-    mapgen = MapGenerator:new(80, 50, 10)
+    mapgen = MapGenerator:new(80, 50, 5)
+    mapgen:doDrunkardsWalk(0.51)
     mapgen:exportToFile("test.txt")
 end
 
@@ -73,24 +74,24 @@ function postSolve(a, b, coll, normalimpulse, tangentimpulse)
 end
 
 function love.update(dt)
-    world:update(dt)    
+    world:update(dt)
 
     kybrd = love.keyboard
     headbody = objects.head.body
-    weaponbody = objects.wpn.body 
-    bullet = objects.bullet.b 
+    weaponbody = objects.wpn.body
+    bullet = objects.bullet.b
     mouse = love.mouse
-    
 
-    x_cur, y_cur = headbody:getLinearVelocity() 
+
+    x_cur, y_cur = headbody:getLinearVelocity()
     mouse_x, mouse_y = mouse.getPosition()
     wpn_x, wpn_y = weaponbody:getPosition()
     head_x, head_y = headbody:getPosition()
-    -- update player angle and velocity 
+    -- update player angle and velocity
     --
     headbody:setLinearVelocity(getPlayerVelocity(x_cur, y_cur, kybrd))
-    headbody:setAngle(getPlayerAngle(mouse, weaponbody)) 
-    
+    headbody:setAngle(getPlayerAngle(mouse, weaponbody))
+
     -- shoot if necessary
     if shouldShoot(mouse) then
         shoot(weaponbody, headbody, mouse, bullet)
@@ -99,7 +100,7 @@ function love.update(dt)
     headbody:setAngularVelocity(0)
 
     if string.len(text) > 0 then -- dont get too long babe
-        text ="" 
+        text =""
     end
 end
 
