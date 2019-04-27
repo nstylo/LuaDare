@@ -67,8 +67,8 @@ function getPlayerVelocity(cur_vel_x, cur_vel_y, kybrd)
     return x_velocity, y_velocity
 end
 
-function getPlayerAngle(mouse, wpn)
-    return -1.5 + math.atan2(mouse:getY() - wpn:getY(), mouse:getX() - wpn:getX())
+function getPlayerAngle(mouse, head)
+    return -1.5 + math.atan2(mouse:getY() - head:getY(), mouse:getX() - head:getX())
 end
 
 function shouldShoot(mouse)
