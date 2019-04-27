@@ -31,7 +31,7 @@ function love.load()
 
     -- Generate map
     MapGenerator = require("MapGenerator")
-    mapgen = MapGenerator:new(200, 200, 10, 15)
+    mapgen = MapGenerator:new(100, 100, 5, 25)
     mapgen:doDrunkardsWalk(0.3)
     mapgen:exportToFile("test.txt")
 
@@ -53,7 +53,6 @@ function love.load()
                 objects.static[key].shape = love.physics.newRectangleShape(mapgen.cellsize, mapgen.cellsize)
                 objects.static.fixture = love.physics.newFixture(objects.static[key].body, objects.static[key].shape)
             end
-            
         end
     end
 
