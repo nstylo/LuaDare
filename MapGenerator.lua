@@ -11,8 +11,8 @@ function MapGenerator:new(sizeX, sizeY)
     this = {} 
 
     -- assign dimensions
-    this.x = sizeX
-    this.y = sizeY
+    this.sizeX = sizeX
+    this.sizeY = sizeY
 
     -- assign an empty grid
     grid = {}
@@ -31,7 +31,17 @@ end
 -- exports grid to file
 -- param filename : filename of the exported level file
 function MapGenerator:exportToFile(filename)
-    -- TODO: encode grid to file if grid is not empty  
+    file = io.open("test.txt", "w+")
+
+    for i=1, self.sizeX do
+        for j=1, self.sizeY do
+            if j == self.sizeY then -- last grid element
+                file:write("0\n")
+            else
+                file:write("0 ")
+            end
+        end
+    end
 end
 
 -- generate the map i.e. init the grid algorithmically
