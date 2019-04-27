@@ -1,17 +1,22 @@
 --! file: player.lua
     
 velocity = 500 
+bullet_speed = 10
+bullet_force = 100
+body_pushback = 500
 
 up = "w"
 down = "s"
 left = "a"
 right = "d"
+shooot = 1 
 
-function setControls(_up, _down, _left, _right)
+function setControls(_up, _down, _left, _right, _shoot)
     up = _up
     down = _down
     left = _left
     right = _right
+    shooot = _shoot
 end
 
 function setPlayerVelocity(vel)
@@ -62,8 +67,31 @@ function getPlayerVelocity(cur_vel_x, cur_vel_y, kybrd)
     return x_velocity, y_velocity
 end
 
-function getPlayerAngle(mouse_x, mouse_y, wpn_x, wpn_y)
-    return -1.5 + math.atan2(mouse_y - wpn_y, mouse_x - wpn_x)
+function getPlayerAngle(mouse, wpn)
+    return -1.5 + math.atan2(mouse:getY() - wpn:getY(), mouse:getX() - wpn:getX())
 end
 
+function shouldShoot(mouse)
+    return mouse.isDown(shooot)
+end
 
+function setBulletProperties(force, speed, pushback)
+    bullet_speed = speed
+    bullet_force = force
+    body_pushback = pushback
+end
+
+function shoot(wpn, head, mouse, bullet)
+    wpn_x, wpn_y = wpn:getPosition()
+    head_x, head_y = head:getPosition()
+    mouse_x, mouse_y = mouse:getPosition()
+    bullet:setX(wpn_x)
+    bullet:setY(wpn_y)
+    bullet:setActive(true) -- render it
+    -- move bullet
+    bullet:setLinearVelocity((wpn_x - head_x) * bullet_speed,  (wpn_y - head_y) * bullet_speed)
+    -- push bulet
+    bullet:applyForce((mouse_x - wpn_x) * bullet_force, (mouse_y - wpn_y) * bullet_force)
+    -- knockback
+    head:applyForce((head_x - wpn_x) * body_pushback , (head_y - wpn_y) * body_pushback)
+end
