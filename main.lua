@@ -3,10 +3,11 @@ require("player")
 function love.load()
     love.physics.setMeter(64)
     world = love.physics.newWorld(0, 0, true)
+    world:setCallbacks(beginContact, endContact, preSolve, postSolve)
     t, shakeDuration, shakeMagnitude = 0, -1, 0
-
-    objects = {}
-    objects.head = {}
+      
+    objects = {} -- stores objects of the to draw 
+    objects.head = {} -- player
         objects.head.body = love.physics.newBody(world, 400, 200, "dynamic")
         objects.head.body:setMass(0)
         objects.head.body:setAngularVelocity(0)
@@ -25,9 +26,11 @@ function love.load()
 
     player = love.physics.newWeldJoint(objects.head.body, objects.wpn.body, 400, 200)
     player:setDampingRatio(0)
-
+   
     -- contains the bullets
     objects.bullets = {}
+    objects.bullet_touching = {}
+    bullet_amount = 0
 
     -- Generate map
     MapGenerator = require("MapGenerator")
@@ -52,12 +55,13 @@ function love.load()
                 objects.static[key].body = love.physics.newBody(world, worldX, worldY, "static")
                 objects.static[key].shape = love.physics.newRectangleShape(mapgen.cellsize, mapgen.cellsize)
                 objects.static.fixture = love.physics.newFixture(objects.static[key].body, objects.static[key].shape)
+                objects.static.fixture:setUserData("block")
             end
             
         end
     end
 
-    love.window.setMode(mapgen.sizeX * mapgen.cellsize, mapgen.sizeY * mapgen.cellsize)
+    --love.window.setMode(mapgen.sizeX * mapgen.cellsize, mapgen.sizeY * mapgen.cellsize)
     love.graphics.scale(0.5, 0.5)
 end
 
@@ -66,19 +70,41 @@ function startShake(duration, magnitude)
 end
 
 -- adds a bullet to the bullet array: objects.bullets
-function addBullet()
+function addBullet(name)
     bullet = {}
+    objects.bullet_touching[name] = 0
     -- dynamic bullet at whatever coordinates
     bullet.b = love.physics.newBody(world, 10, 10, "dynamic")
     bullet.s = love.physics.newCircleShape(objects.head.shape:getRadius() * 0.5) -- shape of the bullet
     bullet.f = love.physics.newFixture(bullet.b,bullet.s) -- add physics
     bullet.f:setRestitution(1) -- bouncy stuff
-    bullet.f:setUserData("bullet")
+    bullet.f:setUserData(name)
     bullet.b:setActive(false)
     bullet.b:setBullet(true) 
+    bullet.touched = 0
     table.insert(objects.bullets, bullet)
 end
 
+function beginContact(a, b, coll)
+    if tonumber(b:getUserData()) ~= nil then
+        objects.bullet_touching[b:getUserData()] = objects.bullet_touching[b:getUserData()] + 1
+    elseif tonumber(a:getUserData()) ~= nil then
+        objects.bullet_touching[a:getUserData()] = objects.bullet_touching[a:getUserData()] + 1
+    end
+     
+end
+ 
+function endContact(a, b, coll)
+ 
+end
+ 
+function preSolve(a, b, coll)
+ 
+end
+ 
+function postSolve(a, b, coll, normalimpulse, tangentimpulse)
+ 
+end
 
 function love.update(dt)
     world:update(dt)
@@ -105,18 +131,18 @@ function love.update(dt)
     headbody:setAngle(getPlayerAngle(mouse, weaponbody)) 
     -- shoot if necessary
     if shouldShoot(mouse) then
-        addBullet()
+        bullet_amount = bullet_amount + 1
+        addBullet(tostring(bullet_amount))
         shoot(weaponbody, headbody, mouse, objects.bullets[table.getn(objects.bullets)].b)
     end
-
     headbody:setAngularVelocity(0)
 
 end
 
 -- shakes the screen
 function shakeScreen()
-    if #objects.bullets > 1 then -- if we bullets exist
-        startShake(0.2, 2) -- shake
+    if t < shakeDuration and #objects.bullets > 1 then -- if we bullets exist
+        startShake(0.5, 2) -- shake
     end
     if t < shakeDuration then -- if duration not passed
         local dx = love.math.random(-shakeMagnitude, shakeMagnitude) -- shake randomly
@@ -130,16 +156,21 @@ function drawBullets()
     local y_bound_min = objects.head.body:getY() - love.graphics.getHeight()
     local x_bound_max = objects.head.body:getX() + love.graphics.getWidth()
     local y_bound_max = objects.head.body:getY() + love.graphics.getHeight()
+
     for i=#objects.bullets,1,-1 do
         -- get location of the bullet
         local bullet_x, bullet_y = objects.bullets[i].b:getPosition()
         -- if out of bounds for screen
-        if bullet_x < x_bound_min or bullet_y < y_bound_min
-            or bullet_x > x_bound_max or bullet_y > y_bound_max then
+        if (bullet_x < x_bound_min or bullet_y < y_bound_min
+            or bullet_x > x_bound_max or bullet_y > y_bound_max) or 
+            
+            tonumber(objects.bullet_touching[objects.bullets[i].f:getUserData()]) > 5 then
+
             -- destroy the bullet
             objects.bullets[i].b:destroy()
             -- remove it from the array
             table.remove(objects.bullets, i)
+            --table.remove(objects.bullet_touching, objects.bullets[i].f:getUserData())
         elseif objects.bullets[i].b:isActive() then
             -- draw the bullet
             love.graphics.circle("fill", objects.bullets[i].b:getX(), objects.bullets[i].b:getY(), objects.bullets[i].s:getRadius())
