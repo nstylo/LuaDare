@@ -47,10 +47,6 @@ function love.load()
     -- Generate map with 0s
     MapGenerator = require("MapGenerator")
     mapgen = MapGenerator:new(80, 50, 10)
-<<<<<<< HEAD
-=======
-    print(mapgen.sizeX)
->>>>>>> 1271f3c6782298718842aa9ea4cd89c0ae8277a2
     mapgen:exportToFile("test.txt")
 end
 
