@@ -44,6 +44,7 @@ function MapGenerator:new(sizeX, sizeY, numWalkers, cellsize)
         walkers[k] = {x = x, y = y}
     end
 
+
     return setmetatable(this, metatable)
 end
 
@@ -119,7 +120,20 @@ function MapGenerator:addWalker()
             walker.x = self.walkers[i].x
             walker.y = self.walkers[i].y
             table.insert(self.walkers, walker) -- insert the new walker
-            do return end
+        end
+    end
+end
+
+-- clear an area of the spawn
+function MapGenerator:clearSpawn()
+    -- get the middle of the grid
+    local middleX = math.floor(self.sizeX / 2)
+    local middleY = math.floor(self.sizeY / 2)
+
+    -- clear a 20x20 area at spawn
+    for i=(middleX-10), (middleX+10) do
+        for j=(middleY-10), (middleY+10) do
+            self.grid[i][j] = 1 -- set the points to a path
         end
     end
 end
@@ -140,6 +154,7 @@ function MapGenerator:doDrunkardsWalk(perc)
         self:addWalker()
         self:doDrunkardsMove((self.numWalkPath % #self.walkers) + 1)
     end
+    self:clearSpawn()
 end
 
 return MapGenerator
