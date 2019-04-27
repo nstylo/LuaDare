@@ -5,10 +5,20 @@ function love.load()
     world = love.physics.newWorld(0, 0, true)
     world:setCallbacks(beginContact, endContact, preSolve, postSolve)
     t, shakeDuration, shakeMagnitude = 0, -1, 0
+
+    -- Generate map
+    MapGenerator = require("MapGenerator")
+    mapgen = MapGenerator:new(200, 200, 10, 15)
+    mapgen:doDrunkardsWalk(0.3)
+    mapgen:exportToFile("test.txt")
+
+    -- centre of map
+    centre_map_x = math.floor(mapgen.sizeX * mapgen.cellsize / 2)
+    centre_map_y = math.floor(mapgen.sizeY * mapgen.cellsize / 2)
       
     objects = {} -- stores objects of the to draw 
     objects.head = {} -- player
-        objects.head.body = love.physics.newBody(world, 400, 200, "dynamic")
+        objects.head.body = love.physics.newBody(world, centre_map_x, centre_map_y, "dynamic")
         objects.head.body:setMass(0)
         objects.head.body:setAngularVelocity(0)
         objects.head.body:setFixedRotation(false)
@@ -19,12 +29,12 @@ function love.load()
         objects.head.body:setInertia(50)
 
     objects.wpn = {}
-    objects.wpn.body = love.physics.newBody(world, 400, 205, "dynamic")
+    objects.wpn.body = love.physics.newBody(world, centre_map_x, centre_map_y + 5, "dynamic")
     objects.wpn.shape = love.physics.newRectangleShape(1, 5)
     objects.wpn.fixture = love.physics.newFixture(objects.wpn.body, objects.wpn.shape)
     objects.wpn.fixture:setUserData("Weapon")
 
-    player = love.physics.newWeldJoint(objects.head.body, objects.wpn.body, 400, 200)
+    player = love.physics.newWeldJoint(objects.head.body, objects.wpn.body, centre_map_x, centre_map_y)
     player:setDampingRatio(0)
    
     -- contains the bullets
@@ -32,11 +42,6 @@ function love.load()
     objects.bullet_touching = {}
     bullet_amount = 0
 
-    -- Generate map
-    MapGenerator = require("MapGenerator")
-    mapgen = MapGenerator:new(200, 200, 10, 15)
-    mapgen:doDrunkardsWalk(0.3)
-    mapgen:exportToFile("test.txt")
 
     -- static world objects
     objects.static = {}
