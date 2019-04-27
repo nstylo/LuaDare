@@ -81,30 +81,23 @@ function love.update(dt)
 
     kybrd = love.keyboard
     headbody = objects.head.body
+    weaponbody = objects.wpn.body 
+    bullet = objects.bullet.b 
+    mouse = love.mouse
     
-    x_cur, y_cur = headbody:getLinearVelocity() -- current velocity
-    y_changed = false -- if y velocity has changed
-    x_changed = false -- if x velocity has changed
-    mouse_x, mouse_y = love.mouse.getPosition()
-    wpn_x, wpn_y = objects.wpn.body:getPosition()
+
+    x_cur, y_cur = headbody:getLinearVelocity() 
+    mouse_x, mouse_y = mouse.getPosition()
+    wpn_x, wpn_y = weaponbody:getPosition()
     head_x, head_y = headbody:getPosition()
-    
+    -- update player angle and velocity 
+    --
     headbody:setLinearVelocity(getPlayerVelocity(x_cur, y_cur, kybrd))
-
-    --headbody:setLinearVelocity(-wpn_x + mouse_x, -wpn_y + mouse_y)
-    --objects.wpn.body:setAngle(math.atan2(wpn_x - mouse_x, wpn_y - mouse_y))
-    --headbody:setAngle(headbody:getAngle() - findangle(wpn_x - head_x, wpn_y - head_y, mouse_x - head_x, mouse_y - head_y))
-    headbody:setAngle(getPlayerAngle(mouse_x, mouse_y, wpn_x, wpn_y)) 
-    --objects.wpn.body:setAngle(math.atan2(wpn_x - mouse_x, wpn_y - mouse_y))
-
-    if kybrd.isDown("space") then
-        -- shoot
-        objects.bullet.b:setX(wpn_x)
-        objects.bullet.b:setY(wpn_y)
-        objects.bullet.b:setActive(true)
-        objects.bullet.b:setLinearVelocity((wpn_x - head_x) * 10, 10 * (wpn_y - head_y))
-        objects.bullet.b:applyForce((-1 * wpn_x + mouse_x) * 100, 100 * (-1 * wpn_y +  mouse_y))
-        headbody:applyForce((wpn_x - head_x) * -500, -500 * (wpn_y - head_y))
+    headbody:setAngle(getPlayerAngle(mouse, weaponbody)) 
+    
+    -- shoot if necessary
+    if shouldShoot(mouse) then
+        shoot(weaponbody, headbody, mouse, bullet)
     end
 
     headbody:setAngularVelocity(0)
@@ -112,13 +105,6 @@ function love.update(dt)
     if string.len(text) > 0 then -- dont get too long babe
         text ="" 
     end
-end
-
-function findangle(x1, y1, x2, y2)
-    local dot_product = x1 * x2 + y1 * y2
-    local l1 = x1 * x1 + y1 * y1
-    local l2 = x2 * x2 + y2 * y2
-    return  math.acos(dot_product / (math.sqrt(l1) * math.sqrt(l2)))
 end
 
 function love.draw()
