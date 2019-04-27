@@ -7,7 +7,6 @@ down = "s"
 left = "a"
 right = "d"
 
-
 function setControls(_up, _down, _left, _right)
     up = _up
     down = _down
@@ -15,8 +14,11 @@ function setControls(_up, _down, _left, _right)
     right = _right
 end
 
+function setPlayerVelocity(vel)
+    velocity = vel
+end
 
-function getVelocity(cur_vel_x, cur_vel_y, kybrd)
+function getPlayerVelocity(cur_vel_x, cur_vel_y, kybrd)
     y_changed = false
     x_changed = false
     x_velocity = cur_vel_x
@@ -59,4 +61,9 @@ function getVelocity(cur_vel_x, cur_vel_y, kybrd)
 
     return x_velocity, y_velocity
 end
+
+function getPlayerAngle(mouse_x, mouse_y, wpn_x, wpn_y)
+    return -1.5 + math.atan2(mouse_y - wpn_y, mouse_x - wpn_x)
+end
+
 
