@@ -3,9 +3,8 @@ require("player")
 function love.load()
     love.physics.setMeter(64)
     world = love.physics.newWorld(0, 0, true)    
-    world:setCallbacks(beginContact, endContact, preSolve, postSolve)
     objects = {}
-
+    
     objects.head = {}
         objects.head.body = love.physics.newBody(world, 400, 200, "dynamic")
         objects.head.body:setMass(0)
@@ -31,18 +30,8 @@ function love.load()
         objects.static.s = love.physics.newRectangleShape(200,50)
         objects.static.f = love.physics.newFixture(objects.static.b, objects.static.s)
         objects.static.f:setUserData("Block")
-
-    objects.bullet = {} 
-        objects.bullet.b = love.physics.newBody(world, 10, 10, "dynamic")
-        objects.bullet.s = love.physics.newCircleShape(10)
-        objects.bullet.f = love.physics.newFixture(objects.bullet.b, objects.bullet.s)
-        objects.bullet.f:setRestitution(1)
-        objects.bullet.f:setUserData("bullet")
-        objects.bullet.b:setActive(false)
-        objects.bullet.b:setBullet(true)
-
-    text =""
-    persisting = 0
+    -- contains the bullets
+    objects.bullets = {} 
 
     -- Generate map with 0s
     MapGenerator = require("MapGenerator")
@@ -51,27 +40,17 @@ function love.load()
     mapgen:exportToFile("test.txt")
 end
 
-function beginContact(a, b, coll)
-    x,y = coll:getNormal()
-    text = text.."\n"..a:getUserData().." colliding with "..b:getUserData()
+function addBullet()
+    bullet = {}
+    bullet.b = love.physics.newBody(world, 10, 10, "dynamic")
+    bullet.s = love.physics.newCircleShape(10)
+    bullet.f = love.physics.newFixture(bullet.b,bullet.s)
+    bullet.f:setRestitution(1)
+    bullet.f:setUserData("bullet")
+    bullet.b:setActive(false)
+    bullet.b:setBullet(true) table.insert(objects.bullets, bullet)
 end
 
-function endContact(a, b, coll)
-    persisting = 0
-    text = text.."\n"..a:getUserData().." uncolliding with "..b:getUserData()
-end
-
-function preSolve(a, b, coll)
-    if persisting == 0 then
-        text = text.."\n"..a:getUserData().." touching "..b:getUserData()
-    elseif persisting < 20 then
-        text = text.." "..persisting
-    end
-    persisting = persisting + 1
-end
-
-function postSolve(a, b, coll, normalimpulse, tangentimpulse)
-end
 
 function love.update(dt)
     world:update(dt)    
@@ -79,10 +58,8 @@ function love.update(dt)
     kybrd = love.keyboard
     headbody = objects.head.body
     weaponbody = objects.wpn.body 
-    bullet = objects.bullet.b 
     mouse = love.mouse
     
-
     x_cur, y_cur = headbody:getLinearVelocity() 
     mouse_x, mouse_y = mouse.getPosition()
     wpn_x, wpn_y = weaponbody:getPosition()
@@ -94,24 +71,30 @@ function love.update(dt)
     
     -- shoot if necessary
     if shouldShoot(mouse) then
-        shoot(weaponbody, headbody, mouse, bullet)
+        addBullet()
+        shoot(weaponbody, headbody, mouse, objects.bullets[table.getn(objects.bullets)].b)
     end
 
     headbody:setAngularVelocity(0)
 
-    if string.len(text) > 0 then -- dont get too long babe
-        text ="" 
-    end
 end
 
 function love.draw()
     love.graphics.circle("line", objects.head.body:getX() , objects.head.body:getY(), objects.head.shape:getRadius())
     love.graphics.polygon("line", objects.wpn.body:getWorldPoints(objects.wpn.shape:getPoints()))
+
     if objects.static.b:isActive() then
         love.graphics.polygon("line", objects.static.b:getWorldPoints(objects.static.s:getPoints()))
     end
-    if objects.bullet.b:isActive() then
-        love.graphics.circle("fill", objects.bullet.b:getX(), objects.bullet.b:getY(), objects.bullet.s:getRadius())
+    for i=#objects.bullets,1,-1 do
+        local bullet_x, bullet_y = objects.bullets[i].b:getPosition()
+        -- do nothing
+        if (bullet_x < 0 or bullet_y < 0 or bullet_x > love.graphics.getWidth() or bullet_y > love.graphics.getHeight()) then
+            objects.bullets[i].b:destroy()
+            --objects.bullets[i].b:destroy()
+            table.remove(objects.bullets, i)
+        elseif objects.bullets[i].b:isActive() then
+            love.graphics.circle("fill", objects.bullets[i].b:getX(), objects.bullets[i].b:getY(), objects.bullets[i].s:getRadius())
+        end
     end
-    love.graphics.print(text, 10, 10)
 end
