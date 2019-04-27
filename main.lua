@@ -46,7 +46,7 @@ function love.load()
 
     -- Generate map with 0s
     MapGenerator = require("MapGenerator")
-    mapgen = MapGenerator:new(80, 50)
+    mapgen = MapGenerator:new(80, 50, 10)
     mapgen:exportToFile("test.txt")
 end
 
