@@ -43,6 +43,12 @@ function love.load()
 
     text =""
     persisting = 0
+
+    -- Generate map with 0s
+    MapGenerator = require("MapGenerator")
+    mapgen = MapGenerator:new(80, 50, 10)
+    print(mapgen.sizeX)
+    mapgen:exportToFile("test.txt")
 end
 
 function beginContact(a, b, coll)
