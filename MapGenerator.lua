@@ -7,7 +7,7 @@ local metatable = { __index = MapGenerator}
 -- param sizeX : define x-dimension of the grid
 -- param sizeY : define y-dimension of the grid
 -- param numWalkers : define number of walkers
-function MapGenerator:new(sizeX, sizeY, numWalkers)
+function MapGenerator:new(sizeX, sizeY, numWalkers, cellsize)
     -- return new object
     local this = {}
     math.randomseed(os.time())
@@ -15,6 +15,7 @@ function MapGenerator:new(sizeX, sizeY, numWalkers)
     -- assign dimensions
     this.sizeX = sizeX
     this.sizeY = sizeY
+    this.cellsize = cellsize
 
     this.numWalkPath = 1
     this.numWalkers = numWalkers
@@ -110,3 +111,4 @@ function MapGenerator:doDrunkardsWalk(perc)
 end
 
 return MapGenerator
+

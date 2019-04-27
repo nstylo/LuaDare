@@ -11,34 +11,54 @@ function love.load()
         objects.head.body:setMass(0)
         objects.head.body:setAngularVelocity(0)
         objects.head.body:setFixedRotation(false)
-        objects.head.shape = love.physics.newCircleShape(20)
+        objects.head.shape = love.physics.newCircleShape(10)
         objects.head.fixture = love.physics.newFixture(objects.head.body, objects.head.shape)
         objects.head.fixture:setRestitution(0)
         objects.head.fixture:setUserData("head")
         objects.head.body:setInertia(50)
 
     objects.wpn = {}
-    objects.wpn.body = love.physics.newBody(world, 400, 230, "dynamic")
-    objects.wpn.shape = love.physics.newRectangleShape(5, 25)
+    objects.wpn.body = love.physics.newBody(world, 400, 205, "dynamic")
+    objects.wpn.shape = love.physics.newRectangleShape(1, 5)
     objects.wpn.fixture = love.physics.newFixture(objects.wpn.body, objects.wpn.shape)
     objects.wpn.fixture:setUserData("Weapon")
 
-    player = love.physics.newWeldJoint(objects.head.body, objects.wpn.body, 400, 230)
+    player = love.physics.newWeldJoint(objects.head.body, objects.wpn.body, 400, 200)
     player:setDampingRatio(0)
 
-    objects.static = {}
-    objects.static.b = love.physics.newBody(world, 400, 400, "static")
-    objects.static.s = love.physics.newRectangleShape(200,50)
-    objects.static.f = love.physics.newFixture(objects.static.b, objects.static.s)
-    objects.static.f:setUserData("Block")
     -- contains the bullets
     objects.bullets = {}
 
-    -- Generate map with 0s
+    -- Generate map
     MapGenerator = require("MapGenerator")
-    mapgen = MapGenerator:new(80, 50, 10)
-    mapgen:doDrunkardsWalk(0.5)
+    mapgen = MapGenerator:new(200, 200, 10, 15)
+    mapgen:doDrunkardsWalk(0.3)
     mapgen:exportToFile("test.txt")
+
+    -- static world objects
+    objects.static = {}
+
+    -- init objects in worldspace
+    key = 0
+    for i = 1, mapgen.sizeX do
+        for j = 1, mapgen.sizeY do
+
+            if mapgen.grid[i][j] == 0 then
+                local worldX = (i - 1) * mapgen.cellsize
+                local worldY = (j - 1) * mapgen.cellsize
+
+                key = key + 1
+                objects.static[key] = {}
+                objects.static[key].body = love.physics.newBody(world, worldX, worldY, "static")
+                objects.static[key].shape = love.physics.newRectangleShape(mapgen.cellsize, mapgen.cellsize)
+                objects.static.fixture = love.physics.newFixture(objects.static[key].body, objects.static[key].shape)
+            end
+            
+        end
+    end
+
+    love.window.setMode(mapgen.sizeX * mapgen.cellsize, mapgen.sizeY * mapgen.cellsize)
+    love.graphics.scale(0.5, 0.5)
 end
 
 function startShake(duration, magnitude)
@@ -50,7 +70,7 @@ function addBullet()
     bullet = {}
     -- dynamic bullet at whatever coordinates
     bullet.b = love.physics.newBody(world, 10, 10, "dynamic")
-    bullet.s = love.physics.newCircleShape(10) -- shape of the bullet
+    bullet.s = love.physics.newCircleShape(objects.head.shape:getRadius() * 0.5) -- shape of the bullet
     bullet.f = love.physics.newFixture(bullet.b,bullet.s) -- add physics
     bullet.f:setRestitution(1) -- bouncy stuff
     bullet.f:setUserData("bullet")
@@ -128,6 +148,8 @@ function drawBullets()
 end
 
 function love.draw()
+    love.graphics.reset()
+
     -- shake the screen
     shakeScreen()
     -- move according to player
@@ -135,10 +157,19 @@ function love.draw()
     love.graphics.circle("line", objects.head.body:getX() , objects.head.body:getY(), objects.head.shape:getRadius())
     love.graphics.polygon("line", objects.wpn.body:getWorldPoints(objects.wpn.shape:getPoints()))
 
-    if objects.static.b:isActive() then
-        love.graphics.polygon("line", objects.static.b:getWorldPoints(objects.static.s:getPoints()))
+    local x_bound_min = objects.head.body:getX() - love.graphics.getWidth()
+    local y_bound_min = objects.head.body:getY() - love.graphics.getHeight()
+    local x_bound_max = objects.head.body:getX() + love.graphics.getWidth()
+    local y_bound_max = objects.head.body:getY() + love.graphics.getHeight()
+
+    for i = 1, #objects.static do
+        local rect_x, rect_y = objects.static[i].body:getPosition()
+        if not (rect_x < x_bound_min and rect_x > x_bound_max and rect_y < y_bound_min and rect_y > y_bound_max) then
+            love.graphics.setColor(165,42,42)
+            love.graphics.polygon("fill", objects.static[i].body:getWorldPoints(objects.static[i].shape:getPoints()))
+        end
     end
     -- draw the bullets
     drawBullets()
-
 end
+
