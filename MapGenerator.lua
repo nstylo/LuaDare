@@ -61,22 +61,26 @@ end
 function MapGenerator:doDrunkardsWalk(w)
     -- TODO: drunkards walk
     math.randomseed(os.time())
-    rand = math.random(1, 4)
+    rand = math.random(1, 4) -- generate random number [1, 4]
 
     print("Walker #: " .. w)
+    walker = self.walkers[w] -- walker we're working with
+
     if rand == 1 then -- north
         print("north")
-        self.walkers[w].y = self.walkers[w].y - 1
+        walker.y = walker.y - 1
     elseif rand == 2 then -- south
         print("south")
-        self.walkers[w].y = self.walkers[w].y + 1
+        walker.y = walker.y + 1
     elseif rand == 3 then -- east
         print("east")
-        self.walkers[w].x = self.walkers[w].x - 1
+        walker.x = walker.x - 1
     elseif rand == 4 then -- west
         print("west")
-        self.walkers[w].x = self.walkers[w].x + 1
+        walker.x = walker.x + 1
     end
+
+    self.grid[walker.x][walker.y] = 1
 end
 
 return MapGenerator
