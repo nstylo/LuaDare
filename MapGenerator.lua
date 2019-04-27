@@ -9,11 +9,15 @@ local metatable = { __index = MapGenerator}
 -- param numWalkers : define number of walkers
 function MapGenerator:new(sizeX, sizeY, numWalkers)
     -- return new object
-    local this = {} 
+    local this = {}
+    math.randomseed(os.time())
 
     -- assign dimensions
     this.sizeX = sizeX
     this.sizeY = sizeY
+
+    this.numWalkPath = 1
+    this.numWalkers = numWalkers
 
     -- assign an empty grid
     local grid = {}
@@ -32,8 +36,8 @@ function MapGenerator:new(sizeX, sizeY, numWalkers)
     -- init walkers at middle of grid
     local x = math.floor(sizeX / 2)
     local y = math.floor(sizeY / 2)
-    
-    for k = 1, numWalkers do
+
+    for k = 1, this.numWalkers do
         walkers[k] = {x = x, y = y}
     end
 
@@ -61,35 +65,47 @@ function MapGenerator:exportToFile(filename)
             end
         end
     end
+    file:seek("set", 0)
+    file:close()
 end
 
 -- generate the map i.e. init the grid algorithmically
-function MapGenerator:doDrunkardsWalk(w)
+function MapGenerator:doDrunkardsMove(w)
     -- TODO: drunkards walk
-    math.randomseed(os.time())
     rand = math.random(1, 4) -- generate random number [1, 4]
 
-    print("Walker #: " .. w)
     walker = self.walkers[w] -- walker we're working with
 
-    if rand == 1 then -- north
-        print("north")
+    if walker.y ~= 1 and rand == 1 then -- north
         walker.y = walker.y - 1
-    elseif rand == 2 then -- south
-        print("south")
+    elseif walker.y ~= self.sizeY and rand == 2 then -- south
         walker.y = walker.y + 1
-    elseif rand == 3 then -- east
-        print("east")
-        walker.x = walker.x - 1
-    elseif rand == 4 then -- west
-        print("west")
+    elseif walker.x ~= self.sizeX and rand == 3 then -- east
         walker.x = walker.x + 1
+    elseif walker.x ~= 1 and rand == 4 then -- west
+        walker.x = walker.x - 1
     end
 
     -- check if current grid index is a 0, if so, then change to 1 and increment counter
     if self.grid[walker.x][walker.y] == 0 then
         self.grid[walker.x][walker.y] = 1
         self.numWalkPath = self.numWalkPath + 1 -- increment number of non 0s
+    end
+end
+
+-- param perc : the percentage covered with walking paths
+function MapGenerator:doDrunkardsWalk(perc)
+    -- iter is given in percentage
+    if perc > 1 then
+        perc = 1
+    elseif perc < 0 then
+        perc = 0
+    end
+
+    -- walk with a walker until we find a tile to set to 1
+    -- until the desired percentage is reached
+    while (self.numWalkPath / (self.sizeX * self.sizeY)) < perc do
+        self:doDrunkardsMove((self.numWalkPath % self.numWalkers) + 1)
     end
 end
 

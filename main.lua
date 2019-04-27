@@ -2,8 +2,8 @@ require("player")
 
 function love.load()
     love.physics.setMeter(64)
-    world = love.physics.newWorld(0, 0, true)    
-    t, shakeDuration, shakeMagnitude = 0, -1, 0 
+    world = love.physics.newWorld(0, 0, true)
+    t, shakeDuration, shakeMagnitude = 0, -1, 0
 
     objects = {}
     objects.head = {}
@@ -18,25 +18,26 @@ function love.load()
         objects.head.body:setInertia(50)
 
     objects.wpn = {}
-        objects.wpn.body = love.physics.newBody(world, 400, 230, "dynamic")
-        objects.wpn.shape = love.physics.newRectangleShape(5, 25)
-        objects.wpn.fixture = love.physics.newFixture(objects.wpn.body, objects.wpn.shape)
-        objects.wpn.fixture:setUserData("Weapon")
-    
+    objects.wpn.body = love.physics.newBody(world, 400, 230, "dynamic")
+    objects.wpn.shape = love.physics.newRectangleShape(5, 25)
+    objects.wpn.fixture = love.physics.newFixture(objects.wpn.body, objects.wpn.shape)
+    objects.wpn.fixture:setUserData("Weapon")
+
     player = love.physics.newWeldJoint(objects.head.body, objects.wpn.body, 400, 230)
     player:setDampingRatio(0)
 
     objects.static = {}
-        objects.static.b = love.physics.newBody(world, 400, 400, "static")
-        objects.static.s = love.physics.newRectangleShape(200,50)
-        objects.static.f = love.physics.newFixture(objects.static.b, objects.static.s)
-        objects.static.f:setUserData("Block")
+    objects.static.b = love.physics.newBody(world, 400, 400, "static")
+    objects.static.s = love.physics.newRectangleShape(200,50)
+    objects.static.f = love.physics.newFixture(objects.static.b, objects.static.s)
+    objects.static.f:setUserData("Block")
     -- contains the bullets
-    objects.bullets = {} 
+    objects.bullets = {}
 
     -- Generate map with 0s
     MapGenerator = require("MapGenerator")
     mapgen = MapGenerator:new(80, 50, 10)
+    mapgen:doDrunkardsWalk(0.5)
     mapgen:exportToFile("test.txt")
 end
 
@@ -60,27 +61,28 @@ end
 
 
 function love.update(dt)
-    headbody = objects.head.body
-    camera_head_x, camera_head_y = headbody:getPosition()
-    world:update(dt)    
+    world:update(dt)
 
+    headbody = objects.head.body
     if t < shakeDuration then
         t = t + dt
     end
 
     head_x, head_y = headbody:getPosition()
     kybrd = love.keyboard
-    weaponbody = objects.wpn.body 
+    headbody = objects.head.body
+    weaponbody = objects.wpn.body
     mouse = love.mouse
-    
-    x_cur, y_cur = headbody:getLinearVelocity() 
+
+    x_cur, y_cur = headbody:getLinearVelocity()
     mouse_x, mouse_y = mouse.getPosition()
     wpn_x, wpn_y = weaponbody:getPosition()
     -- update player angle and velocity 
     --
+    head_x, head_y = headbody:getPosition()
+    -- update player angle and velocity
     headbody:setLinearVelocity(getPlayerVelocity(x_cur, y_cur, kybrd))
     headbody:setAngle(getPlayerAngle(mouse, weaponbody)) 
-    
     -- shoot if necessary
     if shouldShoot(mouse) then
         addBullet()
