@@ -6,7 +6,7 @@ local metatable = { __index = MapGenerator}
 
 -- param sizeX : define x-dimension of the grid
 -- param sizeY : define y-dimension of the grid
--- param numWalkers : define number of walkers
+-- param numWalkers : define number of starting walkers
 function MapGenerator:new(sizeX, sizeY, numWalkers)
     -- return new object
     local this = {}
@@ -16,8 +16,10 @@ function MapGenerator:new(sizeX, sizeY, numWalkers)
     this.sizeX = sizeX
     this.sizeY = sizeY
 
-    this.numWalkPath = 1
-    this.numWalkers = numWalkers
+    this.numWalkPath = 0
+    this.minWalkers = 1
+    this.maxWalkers = 10
+    this.startWalkers = numWalkers
 
     -- assign an empty grid
     local grid = {}
@@ -37,7 +39,7 @@ function MapGenerator:new(sizeX, sizeY, numWalkers)
     local x = math.floor(sizeX / 2)
     local y = math.floor(sizeY / 2)
 
-    for k = 1, this.numWalkers do
+    for k = 1, this.startWalkers do
         walkers[k] = {x = x, y = y}
     end
 
@@ -93,6 +95,34 @@ function MapGenerator:doDrunkardsMove(w)
     end
 end
 
+-- Delete walkers with a certain chance
+function MapGenerator:delWalker()
+    local chanceWalkerDel = 0.001
+
+    for i=#self.walkers,1,-1 do
+        if math.random() < chanceWalkerDel and #self.walkers > self.minWalkers then
+            table.remove(self.walkers, i) -- remove the walker
+            do return end
+        end
+    end
+end
+
+-- Add walkers with a certain chance
+function MapGenerator:addWalker()
+    local chanceWalkerAdd = 0.001
+
+    for i=1, #self.walkers do
+        if math.random() < chanceWalkerAdd and #self.walkers < self.maxWalkers then
+            local walker = {} -- Create new walker
+            -- Set new walker's x and y coords to i walker's
+            walker.x = self.walkers[i].x
+            walker.y = self.walkers[i].y
+            table.insert(self.walkers, walker) -- insert the new walker
+            do return end
+        end
+    end
+end
+
 -- param perc : the percentage covered with walking paths
 function MapGenerator:doDrunkardsWalk(perc)
     -- iter is given in percentage
@@ -105,7 +135,9 @@ function MapGenerator:doDrunkardsWalk(perc)
     -- walk with a walker until we find a tile to set to 1
     -- until the desired percentage is reached
     while (self.numWalkPath / (self.sizeX * self.sizeY)) < perc do
-        self:doDrunkardsMove((self.numWalkPath % self.numWalkers) + 1)
+        self:delWalker()
+        self:addWalker()
+        self:doDrunkardsMove((self.numWalkPath % #self.walkers) + 1)
     end
 end
 
