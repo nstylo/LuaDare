@@ -19,7 +19,7 @@ function MapGenerator:new(sizeX, sizeY, numWalkers, cellsize)
 
     this.numFloors = 0 -- number of floors
     this.minWalkers = 1 -- minimum number of walkers allowed to exist
-    this.maxWalkers = 5 -- maximum number of walkers allowed to exist
+    this.maxWalkers = 15 -- maximum number of walkers allowed to exist
     this.startWalkers = numWalkers -- The starting amount of walkers
 
     -- assign an empty grid
@@ -27,7 +27,8 @@ function MapGenerator:new(sizeX, sizeY, numWalkers, cellsize)
     this.grid = grid
 
     -- initializes the grid (all walls)
-    for i = 1, sizeX do grid[i] = {}
+    for i = 1, sizeX do
+        grid[i] = {}
         for j = 1, sizeY do
             grid[i][j] = 0
         end
@@ -101,7 +102,7 @@ end
 
 -- Delete walkers with a certain chance
 function MapGenerator:delWalker()
-    local chanceWalkerDel = 0.001
+    local chanceWalkerDel = 0.05
 
     -- loop through walkers, remove based on random chance
     for i = 1, #self.walkers do
@@ -114,7 +115,7 @@ end
 
 -- Add walkers with a certain chance
 function MapGenerator:addWalker()
-    local chanceWalkerAdd = 0.001
+    local chanceWalkerAdd = 0.05
 
     -- loop through walkers, add based on random chance
     for i = 1, #self.walkers do
@@ -142,6 +143,20 @@ function MapGenerator:clearSpawn()
     end
 end
 
+-- clears standalone wall blocks in the middle of the map
+function MapGenerator:cleanupMap()
+    for i = 1, self.sizeX do
+        for j = 1, self.sizeY do
+            -- check if a wall has no neighbors, if so, make it a floor tile
+            if not (i >= self.sizeX or i <= 1 or j <= 1 or j >= self.sizeY) then
+                if self.grid[i][j] == 0 and self.grid[i-1][j] == 1 and self.grid[i][j-1] == 1 and self.grid[i+1][j] == 1 and self.grid[i][j+1] == 1 then
+                    self.grid[i][j] = 1
+                end
+            end
+        end
+    end
+end
+
 -- param ratio : the percentage covered with walking paths
 function MapGenerator:doDrunkardsWalk(ratio)
     -- ratio [0, 1]
@@ -161,7 +176,7 @@ function MapGenerator:doDrunkardsWalk(ratio)
     end
 
     self:clearSpawn() -- make a clearing for the spawn area
+    self:cleanupMap()
 end
 
 return MapGenerator
-
