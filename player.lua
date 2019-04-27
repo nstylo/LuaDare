@@ -1,9 +1,9 @@
 --! file: player.lua
     
 velocity = 500 
-bullet_speed = 10
-bullet_force = 100
-body_pushback = 50 
+bullet_speed = 5
+bullet_force = 50
+body_pushback = 10
 
 up = "w"
 down = "s"

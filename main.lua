@@ -14,12 +14,16 @@ function love.load()
     mapgen:exportToFile("test.txt")
       
     objects = {} -- stores objects to draw and physics
+    -- centre of map
+    centre_map_x = math.floor(mapgen.sizeX * mapgen.cellsize / 2)
+    centre_map_y = math.floor(mapgen.sizeY * mapgen.cellsize / 2)
+
     -- static world objects
     objects.static = {}
-    initializeDrawableObjects(objects) -- initialize all drawable objects
-    -- join the weapon and the player
-    player = love.physics.newWeldJoint(objects.head.body, objects.wpn.body, 400, 200)
-    player:setDampingRatio(0)
+    objects.head= {} -- player
+    objects.wpn = {} -- weapon
+    initializePlayer(objects.head, objects.wpn, centre_map_x, centre_map_y)
+    initializeMap(objects.static)
    
     -- contains the bullets
     objects.bullets = {} -- contains bullets currently flying
@@ -82,33 +86,30 @@ function love.draw()
     drawBullets(x_bound_min, y_bound_min, x_bound_max, y_bound_max)
 end
 
-function initializeDrawableObjects(container) 
-    initializePlayer(container)
-    initializeMap(container)
-end
-
-function initializePlayer(container)
+function initializePlayer(player_container, weapon_container, player_x, player_y)
+    weapon_width = 1
+    weapon_height = 5
     -- player
-    container.head = {}
-    container.head.body = love.physics.newBody(world, 400, 200, "dynamic")
-    container.head.body:setMass(0)
-    container.head.body:setAngularVelocity(0)
-    container.head.shape = love.physics.newCircleShape(10)
-    container.head.fixture = love.physics.newFixture(container.head.body, container.head.shape)
-    container.head.fixture:setRestitution(0)
-    container.head.fixture:setUserData("head")
-    container.head.body:setInertia(50)
+    player_container.body = love.physics.newBody(world, player_x, player_y, "dynamic")
+    player_container.body:setMass(0)
+    player_container.body:setAngularVelocity(0)
+    player_container.shape = love.physics.newCircleShape(10)
+    player_container.fixture = love.physics.newFixture(player_container.body, player_container.shape)
+    player_container.fixture:setRestitution(0)
+    player_container.fixture:setUserData("head")
+    player_container.body:setInertia(50)
     -- starting weapon
-    container.wpn = {}
-    container.wpn.body = love.physics.newBody(world, 400, 210, "dynamic")
-    container.wpn.shape = love.physics.newRectangleShape(1, 5)
-    container.wpn.fixture = love.physics.newFixture(container.wpn.body, container.wpn.shape)
-    container.wpn.fixture:setUserData("Weapon")
+    weapon_container.body = love.physics.newBody(world, player_x, player_y + 2*weapon_height, "dynamic")
+    weapon_container.shape = love.physics.newRectangleShape(weapon_width, weapon_height)
+    weapon_container.fixture = love.physics.newFixture(weapon_container.body, weapon_container.shape)
+    weapon_container.fixture:setUserData("Weapon")
+    -- join the weapon and the player
+    player = love.physics.newWeldJoint(player_container.body, weapon_container.body, player_x, player_y)
+    player:setDampingRatio(0)
 end
 
 -- init map in world
-function initializeMap(container)
-    world_blocks = container.static
+function initializeMap(world_blocks)
     key = 0 -- key to access index
     for i = 1, mapgen.sizeX do -- for each coordinate combination
         for j = 1, mapgen.sizeY do
