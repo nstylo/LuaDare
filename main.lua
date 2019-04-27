@@ -88,8 +88,8 @@ function love.update(dt)
 end
 
 function shakeScreen()
-    if t > shakeDuration and #objects.bullets > 1 then
-        startShake(1, 2)
+    if #objects.bullets > 1 then
+        startShake(0.2, 2)
     end
     if t < shakeDuration then
         local dx = love.math.random(-shakeMagnitude, shakeMagnitude)
