@@ -3,7 +3,7 @@
 velocity = 500 
 bullet_speed = 10
 bullet_force = 100
-body_pushback = 500
+body_pushback = 50 
 
 up = "w"
 down = "s"
@@ -89,7 +89,7 @@ function shoot(wpn, head, mouse, bullet)
     bullet:setY(wpn_y)
     bullet:setActive(true) -- render it
     -- move bullet
-    bullet:setLinearVelocity((wpn_x - head_x) * bullet_speed,  (wpn_y - head_y) * bullet_speed)
+    bullet:setLinearVelocity((wpn_x - head_x + math.random(5, 100)) * bullet_speed,  (wpn_y - head_y + math.random(5,100)) * bullet_speed)
     -- push bulet
     bullet:applyForce((mouse_x - wpn_x) * bullet_force, (mouse_y - wpn_y) * bullet_force)
     -- knockback
