@@ -1,5 +1,16 @@
 require("player")
 
+function tmpGunBullet()
+    local bullet = {}
+    bullet.b = love.physics.newBody(world, 10, 10, "dynamic")
+    bullet.s = love.physics.newCircleShape(objects.head.shape:getRadius() * 0.5)
+    bullet.f = love.physics.newFixture(bullet.b, bullet.s) -- add physics
+    bullet.f:setRestitution(0.2) -- determine how bouncy this be
+    bullet.b:setActive(false)
+    bullet.b:setBullet(true)
+    return bullet
+end
+
 function love.load()
     love.physics.setMeter(64)
     world = love.physics.newWorld(0, 0, true)
