@@ -232,10 +232,21 @@ end
 function beginContact(a, b, coll)
     -- update number of times a bullet touched
     if tonumber(b:getUserData()) ~= nil then
-        objects.bullet_touching[b:getUserData()] = objects.bullet_touching[b:getUserData()] + 1
+	    print(a:getUserData())
+	    if a:getUserData() == "enemy" then
+	        -- delete the enemy
+	    else
+	        -- bounce off wall
+            objects.bullet_touching[b:getUserData()] = objects.bullet_touching[b:getUserData()] + 1
+	    end
     elseif tonumber(a:getUserData()) ~= nil then
-        objects.bullet_touching[a:getUserData()] = objects.bullet_touching[a:getUserData()] + 1
+	    if a:getUserData() == "enemy" then
+            -- delete the enemy
+        else
+            objects.bullet_touching[a:getUserData()] = objects.bullet_touching[a:getUserData()] + 1
+        end
     end
+
 
 end
 
