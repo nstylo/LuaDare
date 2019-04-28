@@ -2,7 +2,8 @@ require("player")
 
 function love.load()
     love.physics.setMeter(64)
-    world = love.physics.newWorld(0, 0, true) world:setCallbacks(beginContact, endContact, preSolve, postSolve)
+    world = love.physics.newWorld(0, 0, true)
+    world:setCallbacks(beginContact, endContact, preSolve, postSolve)
     t, shakeDuration, shakeMagnitude = 0, -1, 0 -- initialization for camera shaking parameters
     MAX_TOUCHING = 5 -- number of times the bullets can bounce before die
 
@@ -31,6 +32,11 @@ function love.load()
 
     -- love.window.setMode(mapgen.sizeX * mapgen.cellsize, mapgen.sizeY * mapgen.cellsize)   
     
+    -- create enemies
+    Enemy = require("enemy")
+    objects.enemies = {}
+
+    
     -- load textures
     rock = love.graphics.newImage('test.png')
     rock_width = rock:getWidth()
@@ -40,14 +46,13 @@ end
 function love.update(dt)
     world:update(dt)
 
-    headbody = objects.head.body
     if t < shakeDuration then
         t = t + dt
     end
 
+    headbody = objects.head.body
     head_x, head_y = headbody:getPosition()
     kybrd = love.keyboard
-    headbody = objects.head.body
     weaponbody = objects.wpn.body
     mouse = love.mouse
 
@@ -62,7 +67,7 @@ function love.update(dt)
     headbody:setAngle(getPlayerAngle(mouse, weaponbody)) 
     -- shoot if necessary
     if shouldShoot(mouse) then
-        bullet_amount = bullet_amount + 1
+        bullet_amount = (bullet_amount + 1) % 1000000
         addBullet(tostring(bullet_amount))
         shoot(weaponbody, headbody, mouse, objects.bullets[table.getn(objects.bullets)].b)
     end
@@ -71,6 +76,7 @@ end
 
 function love.draw()
     love.graphics.clear()
+
     -- screen bounds in world space
     local x_bound_min = objects.head.body:getX() - love.graphics:getWidth() / 2 - mapgen.cellsize
     local y_bound_min = objects.head.body:getY() - love.graphics:getHeight() / 2 - mapgen.cellsize
