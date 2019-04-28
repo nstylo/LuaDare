@@ -60,9 +60,9 @@ function love.update(dt)
     -- shoot if necessary
     if shouldShoot(mouse) then
         bullet_amount = (bullet_amount + 1)%1000
+    end
     -- update player angle and velocity
     headbody:setLinearVelocity(getPlayerVelocity(x_cur, y_cur, kybrd))
-    headbody:setAngle(getPlayerAngle(mouse, weaponbody))
     -- shoot if necessary
     if shouldShoot(mouse) then
         bullet_amount = (bullet_amount + 1) % 1000000 -- count number of bullets
@@ -85,10 +85,8 @@ function processBullets()
         local vel_x, vel_y = objects.bullets[i].b:getLinearVelocity()
         local vel_length = math.sqrt(vel_x * vel_x + vel_y * vel_y)
         if vel_length < bullet_speed then
-            print("PREVIOUS " ..vel_x.." ".. vel_y)
             vel_x = (bullet_speed / vel_length) * vel_x
             vel_y = (bullet_speed / vel_length) * vel_y
-            print("NEW" ..vel_x.." ".. vel_y)
             objects.bullets[i].b:setLinearVelocity(vel_x, vel_y)
         end
     end
