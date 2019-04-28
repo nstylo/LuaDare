@@ -34,19 +34,34 @@ function love.load()
     -- create enemies
     Enemy = require("enemy")
     objects.enemies = {}
-    for i=1,10 do
-	    print("enemy"..i)
-	    local myX = math.random(centre_map_x, centre_map_x + 1000)
-	    local myY = math.random(centre_map_y - 500, centre_map_y + 1000)
-	    print(myX.." "..myY)
-	    --objects.enemies[i] = Enemy:new(1, 2, 3, 4)
-	    objects.enemies[i] = Enemy:new(myX, myY, 16, 500, world)
+    for i = 1, 3 do
+
+        -- declare spawnpoints
+        local spawnX
+        local spawnY
+
+        -- find valid spawnpositions
+        while true do
+            spawnX = math.random(1, mapgen.sizeX)
+            spawnY = math.random(1, mapgen.sizeY)
+
+            -- if spawnpoint is a path then its a valid spawnpoint
+            if mapgen.grid[spawnX][spawnY] == 1 then
+                break
+            end
+        end
+
+        -- translate valid block to valid ws-coordinates
+	    spawnX = ((spawnX - 1) * mapgen.cellsize) + (mapgen.cellsize / 2)
+	    spawnY = ((spawnY - 1) * mapgen.cellsize) + (mapgen.cellsize / 2)
+
+        -- set enemies
+	    objects.enemies[i] = Enemy:new(spawnX, spawnY, 32, 500, world)
     end
 
     -- load textures
     wall = love.graphics.newImage("/assets/bricks/bricks_0.png")
     dirt = love.graphics.newImage("/assets/dirt1.jpg")
-
 end
 
 function love.update(dt)
@@ -82,7 +97,7 @@ function love.update(dt)
     -- dont rotate the player
     headbody:setAngularVelocity(0)
 
-    for i=1,10 do
+    for i=1,3 do
 	    objects.enemies[i]:update(head_x, head_y)
     end
 
@@ -131,7 +146,7 @@ function love.draw()
     xH = xH - love.graphics.getWidth() / 2
     yH = yH - love.graphics.getHeight() / 2
     -- draw enemies
-    for i=1,10 do
+    for i=1,3 do
 	    objects.enemies[i]:draw(xH, yH)
     end
 
