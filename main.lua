@@ -20,33 +20,33 @@ function love.load()
 
     -- Generate map
     MapGenerator = require("MapGenerator")
-    mapgen = MapGenerator:new(150, 150, 5, 32)
-    mapgen:doDrunkardsWalk(0.3)
+    mapgen = MapGenerator:new(80, 80, 5, 32)
+    mapgen:doDrunkardsWalk(0.05)
     mapgen:exportToFile("test.txt")
 
     -- centre of map
-    centre_map_x = mapgen.sizeX * mapgen.cellsize / 2
-    centre_map_y = mapgen.sizeY * mapgen.cellsize / 2
+    mapCenterX = mapgen.sizeX * mapgen.cellsize / 2
+    mapCenterY = mapgen.sizeY * mapgen.cellsize / 2
 
     objects = {}
     -- stores objects to draw and physics
     objects.static = {} -- static world objects
     objects.head= {} -- player
-    initializePlayer(objects.head, centre_map_x, centre_map_y)
+    initializePlayer(objects.head, mapCenterX, mapCenterY)
     initializeMap(objects.static)
 
     GunCreator = require("gun")
 
-    tmp_gun_bullet_creator = {
+    tmpGun_bullet_creator = {
         create = tmpGunBullet
     }
 
-    tmp_gun = GunCreator:new(0.3, 0.5, 9.5, 9,"assets/sounds/gun_fire.wav", tmp_gun_bullet_creator)
+    tmpGun = GunCreator:new(0.3, 0.5, 9, 13,"assets/sounds/gun_fire.wav", tmpGun_bullet_creator)
 
     -- contains the bullets
     objects.bullets = {} -- contains bullets currently flying
-    objects.bullet_touching = {} -- number of times a bullet touches an object [bullet.f:getUserData()] = #times_touched
-    bullet_amount = 0 -- amount of bullets
+    objects.bulletTouching = {} -- number of times a bullet touches an object [bullet.f:getUserData()] = #times_touched
+    bulletCount = 0 -- amount of bullets
 
     -- love.window.setMode(mapgen.sizeX * mapgen.cellsize, mapgen.sizeY * mapgen.cellsize)
 
@@ -65,7 +65,7 @@ end
 
 function love.update(dt)
     world:update(dt)
-    tmp_gun:update(dt)
+    tmpGun:update(dt)
     if t < shakeDuration then
         t = t + dt
     end
@@ -74,42 +74,42 @@ function love.update(dt)
     kybrd = love.keyboard -- keyboard object
     mouse = love.mouse
     -- get current position
-    head_x, head_y = headbody:getPosition()
+    headX, headY = headbody:getPosition()
     -- get current velocity
-    x_cur, y_cur = headbody:getLinearVelocity()
+    curX, curY = headbody:getLinearVelocity()
     -- update player angle and velocity
-    headbody:setLinearVelocity(getPlayerVelocity(x_cur, y_cur, kybrd))
-    headbody:setAngle(getPlayerAngle(mouse, headbody))
-    -- update player angle and velocity
-    headbody:setLinearVelocity(getPlayerVelocity(x_cur, y_cur, kybrd))
-    -- shoot if necessary
-    if tmp_gun:shouldShoot(mouse) then
-        local translate_x, translate_y = getTranslate()
-        bullet_amount = (bullet_amount + 1) % 10000
-        local bullet = tmp_gun:shoot(headbody,
+    headbody:setLinearVelocity(getPlayerVelocity(curX, curY, kybrd))
+
+    if tmpGun:shouldShoot(mouse) then
+        local translateX, translateY = getTranslate()
+        bulletCount = (bulletCount + 1) % 10000
+        local bullet = tmpGun:shoot(headbody,
             objects.head.shape:getRadius(),
-            mouse:getX() + math.abs(translate_x),
-            mouse:getY() + math.abs(translate_y)
+            mouse:getX() + math.abs(translateX),
+            mouse:getY() + math.abs(translateY)
             )
-        bullet.f:setUserData(tostring(bullet_amount))
-        objects.bullet_touching[tostring(bullet_amount)] = 0
+        bullet.f:setUserData(tostring(bulletCount))
+        objects.bulletTouching[tostring(bulletCount)] = 0
         table.insert(objects.bullets, bullet)
     end
 
-    processBullets()
+    processBullets(tmpGun.speed)
     -- dont rotate the player
     headbody:setAngularVelocity(0)
 end
 
 -- processes the physics of bullets
-function processBullets()
-    for i=1,#objects.bullets do
-        local vel_x, vel_y = objects.bullets[i].b:getLinearVelocity()
-        local vel_length = math.sqrt(vel_x * vel_x + vel_y * vel_y)
-        if vel_length < bullet_speed then
-            vel_x = (bullet_speed / vel_length) * vel_x
-            vel_y = (bullet_speed / vel_length) * vel_y
-            objects.bullets[i].b:setLinearVelocity(vel_x, vel_y)
+function processBullets(speedCap)
+    for i = 1, #objects.bullets do
+        local velX, velY = objects.bullets[i].b:getLinearVelocity()
+        local velLength = math.sqrt(velX * velX + velY * velY)
+
+        if velLength < speedCap then
+            print("PREVIOUS "..velX.." "..velY)
+            velX = (speedCap / velLength) * velX
+            velY = (speedCap / velLength) * velY
+            objects.bullets[i].b:setLinearVelocity(velX, velY)
+            print("AFTER "..velX.." "..velY)
         end
     end
 end
@@ -123,37 +123,37 @@ function love.draw()
     love.graphics.clear()
 
     -- screen bounds in world space
-    local x_bound_min = math.floor(objects.head.body:getX() - love.graphics:getWidth() / 2 - mapgen.cellsize)
-    local y_bound_min = math.floor(objects.head.body:getY() - love.graphics:getHeight() / 2 - mapgen.cellsize)
-    local x_bound_max = math.floor(objects.head.body:getX() + love.graphics:getWidth() / 2 + mapgen.cellsize)
-    local y_bound_max = math.floor(objects.head.body:getY() + love.graphics:getHeight() / 2  + mapgen.cellsize)
+    local minBoundX = math.floor(objects.head.body:getX() - love.graphics:getWidth() / 2 - mapgen.cellsize)
+    local minBoundY = math.floor(objects.head.body:getY() - love.graphics:getHeight() / 2 - mapgen.cellsize)
+    local maxBoundX = math.floor(objects.head.body:getX() + love.graphics:getWidth() / 2 + mapgen.cellsize)
+    local maxBoundY = math.floor(objects.head.body:getY() + love.graphics:getHeight() / 2  + mapgen.cellsize)
 
     -- move according to player
     love.graphics.translate(getTranslate())
     -- draw the player
     love.graphics.circle("line", objects.head.body:getX() , objects.head.body:getY(), objects.head.shape:getRadius())
     -- draw the world
-    drawWorld(x_bound_min, y_bound_min, x_bound_max, y_bound_max)
+    drawWorld(minBoundX, minBoundY, maxBoundX, maxBoundY)
     -- draw the bullets
-    drawBullets(x_bound_min, y_bound_min, x_bound_max, y_bound_max)
+    drawBullets(minBoundX, minBoundY, maxBoundX, maxBoundY)
     -- shake the screen
     --shakeScreen()
     -- draw the player
     love.graphics.circle("line", objects.head.body:getX() , objects.head.body:getY(), objects.head.shape:getRadius())
 end
 
-function initializePlayer(player_container, player_x, player_y)
-    player_container.body = love.physics.newBody(world, player_x, player_y, "dynamic")
-    player_container.body:setMass(1)
-    player_container.body:setAngularVelocity(0)
-    player_container.shape = love.physics.newCircleShape(10)
-    player_container.fixture = love.physics.newFixture(player_container.body, player_container.shape)
-    player_container.fixture:setRestitution(0)
-    player_container.fixture:setUserData("head")
+function initializePlayer(playerContainer, playerX, playerY)
+    playerContainer.body = love.physics.newBody(world, playerX, playerY, "dynamic")
+    playerContainer.body:setMass(1)
+    playerContainer.body:setAngularVelocity(0)
+    playerContainer.shape = love.physics.newCircleShape(10)
+    playerContainer.fixture = love.physics.newFixture(playerContainer.body, playerContainer.shape)
+    playerContainer.fixture:setRestitution(0)
+    playerContainer.fixture:setUserData("head")
 end
 
 -- init map in world
-function initializeMap(world_blocks)
+function initializeMap(worldBlocks)
     key = 0 -- key to access index
     for i = 1, mapgen.sizeX do -- for each coordinate combination
         for j = 1, mapgen.sizeY do
@@ -166,19 +166,19 @@ function initializeMap(world_blocks)
 
                 key = key + 1
                 -- initialize the body of a static block
-                world_blocks[key] = {}
-                world_blocks[key].body = love.physics.newBody(world, worldX, worldY, "static")
-                world_blocks[key].shape = love.physics.newRectangleShape(mapgen.cellsize, mapgen.cellsize)
+                worldBlocks[key] = {}
+                worldBlocks[key].body = love.physics.newBody(world, worldX, worldY, "static")
+                worldBlocks[key].shape = love.physics.newRectangleShape(mapgen.cellsize, mapgen.cellsize)
             end
 
             -- for each block change properties
             if mapgen.grid[i][j] == -1 then
-                world_blocks[key].fixture = love.physics.newFixture(world_blocks[key].body, world_blocks[key].shape)
-                world_blocks[key].fixture:setUserData("indestructible")
+                worldBlocks[key].fixture = love.physics.newFixture(worldBlocks[key].body, worldBlocks[key].shape)
+                worldBlocks[key].fixture:setUserData("indestructible")
             end
             if mapgen.grid[i][j] == 0 then
-                world_blocks[key].fixture = love.physics.newFixture(world_blocks[key].body, world_blocks[key].shape)
-                world_blocks[key].fixture:setUserData("wall")
+                worldBlocks[key].fixture = love.physics.newFixture(worldBlocks[key].body, worldBlocks[key].shape)
+                worldBlocks[key].fixture:setUserData("wall")
             end
         end
     end
@@ -200,11 +200,11 @@ function drawMapBlock(i)
 end
 
 -- draws the world
-function drawWorld(x_bound_min, y_bound_min, x_bound_max, y_bound_max)
+function drawWorld(minBoundX, minBoundY, maxBoundX, maxBoundY)
     for i = 1, #objects.static do
-        local rect_x, rect_y = objects.static[i].body:getPosition() -- get rectangle position
+        local rectX, rectY = objects.static[i].body:getPosition() -- get rectangle position
         -- if draw iff not out of bounds
-        if rect_x > x_bound_min and rect_x < x_bound_max and rect_y < y_bound_max and rect_y > y_bound_min then
+        if rectX > minBoundX and rectX < maxBoundX and rectY < maxBoundY and rectY > minBoundY then
             drawMapBlock(i)
         end
     end
@@ -217,7 +217,7 @@ end
 -- adds a bullet to the bullet array: objects.bullets
 function addBullet(name)
     bullet = {}
-    objects.bullet_touching[name] = 0
+    objects.bulletTouching[name] = 0
     -- dynamic bullet at whatever coordinates
     bullet.b = love.physics.newBody(world, 10, 10, "dynamic")
     bullet.s = love.physics.newCircleShape(objects.head.shape:getRadius() * 0.5) -- shape of the bullet
@@ -234,9 +234,9 @@ end
 function beginContact(a, b, coll)
     -- update number of times a bullet touched
     if tonumber(b:getUserData()) ~= nil then
-        objects.bullet_touching[b:getUserData()] = objects.bullet_touching[b:getUserData()] + 1
+        objects.bulletTouching[b:getUserData()] = objects.bulletTouching[b:getUserData()] + 1
     elseif tonumber(a:getUserData()) ~= nil then
-        objects.bullet_touching[a:getUserData()] = objects.bullet_touching[a:getUserData()] + 1
+        objects.bulletTouching[a:getUserData()] = objects.bulletTouching[a:getUserData()] + 1
     end
 
 end
@@ -267,17 +267,17 @@ function shakeScreen()
     end
 end
 
-function drawBullets(x_bound_min, y_bound_min, x_bound_max, y_bound_max)
+function drawBullets(minBoundX, minBoundY, maxBoundX, maxBoundY)
     for i=#objects.bullets,1,-1 do
         -- get location of the bullet
-        local bullet_x, bullet_y = objects.bullets[i].b:getPosition()
+        local bulletX, bulletY = objects.bullets[i].b:getPosition()
         -- if out of bounds for screen
-        if tonumber(objects.bullet_touching[objects.bullets[i].f:getUserData()]) > MAX_TOUCHING then -- if the number of touchings more than 5
+        if tonumber(objects.bulletTouching[objects.bullets[i].f:getUserData()]) > MAX_TOUCHING then -- if the number of touchings more than 5
             -- destroy the bullet
             objects.bullets[i].b:destroy()
             -- remove it from the array
             table.remove(objects.bullets, i)
-            --table.remove(objects.bullet_touching, objects.bullets[i].f:getUserData())
+            --table.remove(objects.bulletTouching, objects.bullets[i].f:getUserData())
         else
             -- draw the bullet
             love.graphics.circle("fill", objects.bullets[i].b:getX(), objects.bullets[i].b:getY(), objects.bullets[i].s:getRadius())
