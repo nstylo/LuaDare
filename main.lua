@@ -253,8 +253,8 @@ function beginContact(a, b, coll)
 	        -- delete the enemy
 		local idx = tonumber(string.sub(a:getUserData(), 6))
 		print("enemy died:" .. idx)
-		objects.enemies[idx].destroy()
-		table.remove(objects.enemies[idx])
+        -- objects.enemies[idx].destroy()
+        -- table.remove(objects.enemies[idx])
 	    else
 	        -- bounce off wall
             	objects.bullet_touching[b:getUserData()] = objects.bullet_touching[b:getUserData()] + 1
