@@ -1,6 +1,6 @@
 --! file: player.lua
-    
-velocity = 500 
+
+velocity = 500
 bullet_speed = 5
 bullet_force = 50
 body_pushback = 10
@@ -9,7 +9,7 @@ up = "w"
 down = "s"
 left = "a"
 right = "d"
-shooot = 1 
+shooot = 1
 
 function setControls(_up, _down, _left, _right, _shoot)
     up = _up
@@ -34,7 +34,7 @@ function getPlayerVelocity(cur_vel_x, cur_vel_y, kybrd)
         y_velocity = -1 * velocity
     else
         x_velocity = cur_vel_x
-        y_velocity = 0 
+        y_velocity = 0
     end
 
     if  kybrd.isDown(down) then

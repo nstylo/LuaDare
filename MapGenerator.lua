@@ -22,6 +22,8 @@ function MapGenerator:new(sizeX, sizeY, numWalkers, cellsize)
     this.maxWalkers = 10 -- maximum number of walkers allowed to exist
     this.startWalkers = numWalkers -- The starting amount of walkers
 
+    this.thickness = 20 -- thickness of surrounding walls
+
     -- assign an empty grid
     local grid = {}
     this.grid = grid
@@ -115,7 +117,7 @@ end
 
 -- Add walkers with a certain chance
 function MapGenerator:addWalker()
-    local chanceWalkerAdd = 0.05
+    local chanceWalkerAdd = 0.02
 
     -- loop through walkers, add based on random chance
     for i = 1, #self.walkers do
@@ -130,14 +132,15 @@ function MapGenerator:addWalker()
 end
 
 -- clear an area of the spawn
-function MapGenerator:clearSpawn()
+-- param area: areaxarea that gets removed at spawn
+function MapGenerator:clearSpawn(area)
     -- get the middle of the grid
     local middleX = math.floor(self.sizeX / 2)
     local middleY = math.floor(self.sizeY / 2)
 
-    -- clear a 20x20 area at spawn
-    for i = (middleX - 5), (middleX + 5) do
-        for j = (middleY - 5), (middleY + 5) do
+    -- clear an area at spawn
+    for i = (middleX - area), (middleX + area) do
+        for j = (middleY - area), (middleY + area) do
             self.grid[i][j] = 1 -- set the points to a path
         end
     end
@@ -159,10 +162,9 @@ end
 
 -- closes map borders
 function MapGenerator:closeMap()
-    local thickness = 20 -- thickness of surrounding walls
 
     for i = 1, self.sizeX do
-        for j = 1, thickness do -- add a thick wall around the map
+        for j = 1, self.thickness do -- add a thick wall around the map
             self.grid[j][i] = 0
             self.grid[i][j] = 0
 
@@ -191,7 +193,7 @@ function MapGenerator:doDrunkardsWalk(ratio)
     end
 
     self:closeMap() -- closes the map in thick walls
-    self:clearSpawn() -- make a clearing for the spawn area
+    self:clearSpawn(2) -- make a clearing for the spawn area
     self:cleanupMap() -- clears standalone walls (without neighbors)
 end
 

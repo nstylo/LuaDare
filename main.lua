@@ -9,8 +9,8 @@ function love.load()
 
     -- Generate map
     MapGenerator = require("MapGenerator")
-    mapgen = MapGenerator:new(180, 180, 10, 32)
-    mapgen:doDrunkardsWalk(0.2)
+    mapgen = MapGenerator:new(1000, 1000, 5, 32)
+    mapgen:doDrunkardsWalk(0.5)
     mapgen:exportToFile("test.txt")
 
     -- centre of map
@@ -30,8 +30,8 @@ function love.load()
     objects.bullet_touching = {} -- number of times a bullet touches an object [bullet.f:getUserData()] = #times_touched
     bullet_amount = 0 -- amount of bullets
 
-    -- love.window.setMode(mapgen.sizeX * mapgen.cellsize, mapgen.sizeY * mapgen.cellsize)   
-    
+    -- love.window.setMode(mapgen.sizeX * mapgen.cellsize, mapgen.sizeY * mapgen.cellsize)
+
     -- create enemies
     Enemy = require("enemy")
     objects.enemies = {}
