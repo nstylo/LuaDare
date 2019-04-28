@@ -1,5 +1,16 @@
 require("player")
 
+function tmpGunBullet()
+    local bullet = {}
+    bullet.b = love.physics.newBody(world, 10, 10, "dynamic")
+    bullet.s = love.physics.newCircleShape(objects.head.shape:getRadius() * 0.5)
+    bullet.f = love.physics.newFixture(bullet.b, bullet.s) -- add physics
+    bullet.f:setRestitution(0.2) -- determine how bouncy this be
+    bullet.b:setActive(false)
+    bullet.b:setBullet(true)
+    return bullet
+end
+
 function love.load()
     love.physics.setMeter(64)
     world = love.physics.newWorld(0, 0, true)
@@ -24,6 +35,14 @@ function love.load()
     initializePlayer(objects.head, centre_map_x, centre_map_y)
     initializeMap(objects.static)
 
+    GunCreator = require("gun")
+
+    tmp_gun_bullet_creator = {
+        create = tmpGunBullet
+    }
+
+    tmp_gun = GunCreator:new(0.3, 0, 500, 500,"assets/sound/gun_fire.wav", tmp_gun_bullet_creator)
+
     -- contains the bullets
     objects.bullets = {} -- contains bullets currently flying
     objects.bullet_touching = {} -- number of times a bullet touches an object [bullet.f:getUserData()] = #times_touched
@@ -43,6 +62,7 @@ end
 
 function love.update(dt)
     world:update(dt)
+    tmp_gun:update(dt)
     if t < shakeDuration then
         t = t + dt
     end
@@ -60,14 +80,17 @@ function love.update(dt)
     -- update player angle and velocity
     headbody:setLinearVelocity(getPlayerVelocity(x_cur, y_cur, kybrd))
     -- shoot if necessary
-    if shouldShoot(mouse) then
-        bullet_amount = (bullet_amount + 1) % 1000000 -- count number of bullets
-        addBullet(tostring(bullet_amount)) -- give it as a unique id
-        -- TODO:  graphics.translate within the shoot method without passing translate_x and y
-        local translate_x, translate_y = getTranslate() -- translation coordinates
-        shoot(headbody, translate_x, translate_y,
+    if tmp_gun:shouldShoot(mouse) then
+        local translate_x, translate_y = getTranslate()
+        bullet_amount = (bullet_amount + 1) % 10000
+        local bullet = tmp_gun:shoot(headbody,
             objects.head.shape:getRadius(),
-            mouse, objects.bullets[table.getn(objects.bullets)].b)
+            mouse:getX() + math.abs(translate_x),
+            mouse:getY() + math.abs(translate_y)
+            )
+        bullet.f:setUserData(tostring(bullet_amount))
+        objects.bullet_touching[tostring(bullet_amount)] = 0
+        table.insert(objects.bullets, bullet)
     end
 
     processBullets()
@@ -200,9 +223,9 @@ function addBullet(name)
     bullet.f:setUserData(name) -- unique id of the bullet
     bullet.b:setActive(false)
     bullet.b:setBullet(true)
-    bullet.touched = 0
     table.insert(objects.bullets, bullet)
 end
+
 
 -- collision callbacks
 function beginContact(a, b, coll)
