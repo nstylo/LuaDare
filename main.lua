@@ -51,8 +51,34 @@ function love.load()
     -- love.window.setMode(mapgen.sizeX * mapgen.cellsize, mapgen.sizeY * mapgen.cellsize)
 
     -- create enemies
+    enemy_counter = 0
     Enemy = require("enemy")
     objects.enemies = {}
+    for i = 1, 3 do
+
+        -- declare spawnpoints
+        local spawnX
+        local spawnY
+
+        -- find valid spawnpositions
+        while true do
+            spawnX = math.random(1, mapgen.sizeX)
+            spawnY = math.random(1, mapgen.sizeY)
+
+            -- if spawnpoint is a path then its a valid spawnpoint
+            if mapgen.grid[spawnX][spawnY] == 1 then
+                break
+            end
+        end
+
+        -- translate valid block to valid ws-coordinates
+	    spawnX = ((spawnX - 1) * mapgen.cellsize) + (mapgen.cellsize / 2)
+	    spawnY = ((spawnY - 1) * mapgen.cellsize) + (mapgen.cellsize / 2)
+
+        -- set enemies
+	    objects.enemies[i] = Enemy:new(enemy_counter, spawnX, spawnY, 32, 300, world)
+	    enemy_counter = enemy_counter + 1
+    end
 
     -- load textures
     wall = love.graphics.newImage("/assets/bricks/bricks_0.png")
@@ -96,6 +122,11 @@ function love.update(dt)
     processBullets(tmpGun.speed)
     -- dont rotate the player
     headbody:setAngularVelocity(0)
+
+    for i = 1, 3 do
+	    objects.enemies[i]:update(head_x, head_y, objects.head.body:getX(), objects.head.body:getY())
+    end
+
 end
 
 -- processes the physics of bullets
@@ -121,6 +152,7 @@ end
 
 function love.draw()
     love.graphics.clear()
+    love.graphics.reset()
 
     -- screen bounds in world space
     local minBoundX = math.floor(objects.head.body:getX() - love.graphics:getWidth() / 2 - mapgen.cellsize)
@@ -130,14 +162,24 @@ function love.draw()
 
     -- move according to player
     love.graphics.translate(getTranslate())
-    -- draw the player
-    love.graphics.circle("line", objects.head.body:getX() , objects.head.body:getY(), objects.head.shape:getRadius())
     -- draw the world
     drawWorld(minBoundX, minBoundY, maxBoundX, maxBoundY)
     -- draw the bullets
     drawBullets(minBoundX, minBoundY, maxBoundX, maxBoundY)
     -- shake the screen
     --shakeScreen()
+
+    --love.graphics.translate(math.floor(objects.head.body:getX() - love.graphics.getWidth() / 2), math.floor(objects.head.body:getY() - love.graphics.getHeight() / 2))
+    local headbody = objects.head.body
+    xH, yH = headbody:getPosition()
+    xH = xH - love.graphics.getWidth() / 2
+    yH = yH - love.graphics.getHeight() / 2
+    -- draw enemies
+    for i=1,3 do
+	    objects.enemies[i]:draw(xH, yH)
+    end
+
+    love.graphics.setColor(1,1,1)
     -- draw the player
     love.graphics.circle("line", objects.head.body:getX() , objects.head.body:getY(), objects.head.shape:getRadius())
 end
@@ -234,11 +276,23 @@ end
 function beginContact(a, b, coll)
     -- update number of times a bullet touched
     if tonumber(b:getUserData()) ~= nil then
-        objects.bulletTouching[b:getUserData()] = objects.bulletTouching[b:getUserData()] + 1
+        if string.sub(a:getUserData(), 1, 5) == "enemy" then
+            -- delete the enemy
+            local idx = tonumber(string.sub(a:getUserData(), 6))
+            print("enemy died:" .. idx)
+            -- objects.enemies[idx].destroy()
+            -- table.remove(objects.enemies[idx])
+        else
+            -- bounce off wall
+            objects.bullet_touching[b:getUserData()] = objects.bullet_touching[b:getUserData()] + 1
+        end
     elseif tonumber(a:getUserData()) ~= nil then
-        objects.bulletTouching[a:getUserData()] = objects.bulletTouching[a:getUserData()] + 1
+        if string.sub(a:getUserData(), 1, 5) == "enemy" then
+            -- delete the enemy
+        else
+            objects.bullet_touching[a:getUserData()] = objects.bullet_touching[a:getUserData()] + 1
+        end
     end
-
 end
 
 function endContact(a, b, coll)
