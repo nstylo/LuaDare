@@ -298,6 +298,16 @@ function beginContact(a, b, coll)
     elseif tonumber(a:getUserData()) ~= nil then
 	bulletCollision(b, a)
     end
+
+    if isEnemy(a) then
+        if isPlayer(b) then
+	    player:takeDamage(objects.enemies[getIndex(a)].strength)
+	end
+    elseif isEnemy(b) then
+	if isPlayer(a) then
+	    player:takeDamage(objects.enemies[getIndex(b)].strength)
+        end
+    end
 end
 
 function bulletCollision(a, b)
@@ -309,12 +319,24 @@ function bulletCollision(a, b)
 	    if objects.enemies[idx].hp < 0 then
             	objects.enemies[idx]:destroy()
 	    else
-		objects.enemies[idx].hp = objects.enemies[idx].hp - 20
+		objects.enemies[idx]:takeDamage(20)
 	    end
         else
             -- bounce off wall
             objects.bulletTouching[b:getUserData()] = objects.bulletTouching[b:getUserData()] + 1
         end
+end
+
+function isEnemy(fixture)
+    return string.sub(fixture:getUserData(), 1, 5) == "enemy"
+end
+
+function isPlayer(fixture)
+    return fixture:getUserData() == "player"
+end
+
+function getIndex(fixture)
+    return tonumber(string.sub(fixture:getUserData(), 6))
 end
 
 function endContact(a, b, coll)
@@ -387,7 +409,7 @@ function createEnemies()
         spawnY = ((spawnY - 1) * mapgen.cellsize) + (mapgen.cellsize / 2)
 
         -- set enemies
-        objects.enemies[i] = Enemy:new(enemy_counter, spawnX, spawnY, 32, 300, world)
+        objects.enemies[i] = Enemy:new(enemy_counter, spawnX, spawnY, 32, 300, world, 5)
         enemy_counter = enemy_counter + 1
     end
 end

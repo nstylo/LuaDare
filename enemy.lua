@@ -2,7 +2,7 @@
 local Enemy = {}
 local metatable = { __index = Enemy }
 
-function Enemy:new(index, startX, startY, size, speed, world)
+function Enemy:new(index, startX, startY, size, speed, world, strength)
     local this = {}
 
     -- unique ID
@@ -20,6 +20,7 @@ function Enemy:new(index, startX, startY, size, speed, world)
     this.size = size
     this.speed = speed
     this.alive = true
+    this.strength = strength
 
     -- setup physics shit
     this.body = love.physics.newBody(world, startX, startY, "dynamic")
@@ -88,6 +89,10 @@ end
 
 function Enemy:getIndex()
     return self.index
+end
+
+function Enemy:takeDamage(damage)
+    self.hp = self.hp - damage
 end
 
 function Enemy:destroy()

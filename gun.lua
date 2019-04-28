@@ -62,9 +62,11 @@ function Gun:shoot(head, headRadius, mouseX, mouseY)
     self:playSound()   -- play the sound
     local bullet_distance = headRadius + 3 -- distance to spawn from player
     local headX, headY = head:getPosition()
+    --print(headX .. "  " .. headY)
     -- head to mouse
     local toMouseX = mouseX - headX
     local toMouseY = mouseY - headY
+    --print(mouseX .. "  " .. mouseY)
     -- size of the vector
     local scnd_norm = math.sqrt(toMouseX * toMouseX + toMouseY * toMouseY)
     -- normalize the to_mouse vector
