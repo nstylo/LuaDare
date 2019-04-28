@@ -57,10 +57,6 @@ function love.update(dt)
     -- update player angle and velocity
     headbody:setLinearVelocity(getPlayerVelocity(x_cur, y_cur, kybrd))
     headbody:setAngle(getPlayerAngle(mouse, headbody)) 
-    -- shoot if necessary
-    if shouldShoot(mouse) then
-        bullet_amount = (bullet_amount + 1)%1000
-    end
     -- update player angle and velocity
     headbody:setLinearVelocity(getPlayerVelocity(x_cur, y_cur, kybrd))
     -- shoot if necessary
