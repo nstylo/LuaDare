@@ -19,6 +19,8 @@ function love.load()
     local HEALTH = 100
     NUM_ENEMIES = 10
 
+    roundOver = false
+
     love.physics.setMeter(64)
     world = love.physics.newWorld(0, 0, true)
     world:setCallbacks(beginContact, endContact, preSolve, postSolve)
@@ -75,10 +77,28 @@ function love.load()
     musicTrack:play()
 end
 
+function roundIsOver()
+    count = 0 -- number of alive enemies
+
+    for i = 0, #objects.enemies do
+        if objects.enemies[i] ~= nil and objects.enemies[i].alive then -- count alive enemies
+            count = count + 1
+        end
+    end
+
+    if count == 0 then
+        roundOver = true
+    end
+
+    --TODO: Spawn a portal or something to advance to the next round
+end
+
 function love.update(dt)
     if player:isDead() then
         dt = dt / 16
     end
+
+    roundIsOver()
 
     world:update(dt)
     tmpGun:update(dt)
@@ -410,7 +430,7 @@ function createEnemies()
     Enemy = require("enemy")
     objects.enemies = {}
 
-    for i = 1,NUM_ENEMIES do
+    for i = 1, NUM_ENEMIES do
         -- declare spawnpoints
         local spawnX
         local spawnY
