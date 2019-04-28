@@ -1,5 +1,5 @@
 --! file: player.lua
-velocity = 200
+velocity = 400
 bullet_speed = 800
 bullet_force = 500
 body_pushback = 1000

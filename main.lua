@@ -1,16 +1,5 @@
 require("player")
 
-function tmpGunBullet()
-    local bullet = {}
-    bullet.b = love.physics.newBody(world, 10, 10, "dynamic")
-    bullet.s = love.physics.newCircleShape(objects.head.shape:getRadius() * 0.5)
-    bullet.f = love.physics.newFixture(bullet.b, bullet.s) -- add physics
-    bullet.f:setRestitution(0.2) -- determine how bouncy this be
-    bullet.b:setActive(false)
-    bullet.b:setBullet(true)
-    return bullet
-end
-
 function love.load()
     love.physics.setMeter(64)
     world = love.physics.newWorld(0, 0, true)
@@ -20,13 +9,13 @@ function love.load()
 
     -- Generate map
     MapGenerator = require("MapGenerator")
-    mapgen = MapGenerator:new(150, 150, 5, 32)
+    mapgen = MapGenerator:new(100, 100, 5, 64)
     mapgen:doDrunkardsWalk(0.3)
     mapgen:exportToFile("test.txt")
 
     -- centre of map
-    centre_map_x = mapgen.sizeX * mapgen.cellsize / 2
-    centre_map_y = mapgen.sizeY * mapgen.cellsize / 2
+    centre_map_x = math.floor(mapgen.sizeX * mapgen.cellsize / 2)
+    centre_map_y = math.floor(mapgen.sizeY * mapgen.cellsize / 2)
 
     objects = {}
     -- stores objects to draw and physics
@@ -34,14 +23,6 @@ function love.load()
     objects.head= {} -- player
     initializePlayer(objects.head, centre_map_x, centre_map_y)
     initializeMap(objects.static)
-
-    GunCreator = require("gun")
-
-    tmp_gun_bullet_creator = {
-        create = tmpGunBullet
-    }
-
-    tmp_gun = GunCreator:new(0.3, 0.5, 9.5, 9,"assets/sounds/gun_fire.wav", tmp_gun_bullet_creator)
 
     -- contains the bullets
     objects.bullets = {} -- contains bullets currently flying
@@ -82,16 +63,14 @@ function love.load()
 
     -- load textures
     wall = love.graphics.newImage("/assets/bricks/bricks_0.png")
+    rock = love.graphics.newImage("/assets/rock texture.png")
+    rock2 = love.graphics.newImage("/assets/brick texture 2.png")
+    brick = love.graphics.newImage("/assets/brick texture.png")
     dirt = love.graphics.newImage("/assets/dirt1.jpg")
-
-    musicTrack = love.audio.newSource("/assets/sounds/track.mp3", "static")
-    musicTrack:setLooping(true)
-    musicTrack:play()
 end
 
 function love.update(dt)
     world:update(dt)
-    tmp_gun:update(dt)
     if t < shakeDuration then
         t = t + dt
     end
@@ -105,21 +84,18 @@ function love.update(dt)
     x_cur, y_cur = headbody:getLinearVelocity()
     -- update player angle and velocity
     headbody:setLinearVelocity(getPlayerVelocity(x_cur, y_cur, kybrd))
-    headbody:setAngle(getPlayerAngle(mouse, headbody))
+    headbody:setAngle(getPlayerAngle(mouse, headbody)) 
     -- update player angle and velocity
     headbody:setLinearVelocity(getPlayerVelocity(x_cur, y_cur, kybrd))
     -- shoot if necessary
-    if tmp_gun:shouldShoot(mouse) then
-        local translate_x, translate_y = getTranslate()
-        bullet_amount = (bullet_amount + 1) % 10000
-        local bullet = tmp_gun:shoot(headbody,
-            objects.head.shape:getRadius(),
-            mouse:getX() + math.abs(translate_x),
-            mouse:getY() + math.abs(translate_y)
-            )
-        bullet.f:setUserData(tostring(bullet_amount))
-        objects.bullet_touching[tostring(bullet_amount)] = 0
-        table.insert(objects.bullets, bullet)
+    if shouldShoot(mouse) then
+        bullet_amount = (bullet_amount + 1) % 1000000 -- count number of bullets
+        addBullet(tostring(bullet_amount)) -- give it as a unique id
+        -- TODO:  graphics.translate within the shoot method without passing translate_x and y
+        local translate_x, translate_y = getTranslate() -- translation coordinates
+        shoot(headbody, translate_x, translate_y, 
+            objects.head.shape:getRadius(), 
+            mouse, objects.bullets[table.getn(objects.bullets)].b)
     end
 
     processBullets()
@@ -230,10 +206,10 @@ end
 function drawMapBlock(i)
     -- choose texture per block
     local texture = nil
-    if objects.static[i].fixture:getUserData() == "indestructible" then
-        texture = wall
+    if objects.static[i].fixture:getUserData() == "wall" then
+        texture = rock2
     else
-        texture  = dirt
+        texture  = brick
     end
 
     -- draw polygon and texture
@@ -268,9 +244,9 @@ function addBullet(name)
     bullet.f:setUserData(name) -- unique id of the bullet
     bullet.b:setActive(false)
     bullet.b:setBullet(true)
+    bullet.touched = 0
     table.insert(objects.bullets, bullet)
 end
-
 
 -- collision callbacks
 function beginContact(a, b, coll)
