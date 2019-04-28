@@ -9,7 +9,10 @@ function tmpGunBullet()
     return bullet
 end
 
+local suit = require 'suit'
+
 function love.load()
+    input = {text = ""}
     -- player constants
     local PLAYER_VELOCITY = 200
     local HEALTH = 100
@@ -96,6 +99,27 @@ function love.update(dt)
     world:update(dt)
     tmpGun:update(dt)
 
+    -- put the layout origin at position (100,100)
+    -- the layout will grow down and to the right from this point
+    suit.layout:reset(100,100)
+
+    -- put an input widget at the layout origin, with a cell size of 200 by 30 pixels
+    suit.Input(input, suit.layout:row(200,30))
+
+    -- put a label that displays the text below the first cell
+    -- the cell size is the same as the last one (200x30 px)
+    -- the label text will be aligned to the left
+    suit.Label("Health"..player.health..input.text, {align = "left"}, suit.layout:row())
+
+    -- put an empty cell that has the same size as the last cell (200x30 px)
+    suit.layout:row()
+
+    -- put a button of size 200x30 px in the cell below
+    -- if the button is pressed, quit the game
+    if suit.Button("Close", suit.layout:row()).hit then
+        love.event.quit()
+    end
+
     if t < shakeDuration then
         t = t + dt
     end
@@ -146,6 +170,20 @@ function getTranslate()
     return -player.body:getX() + love.graphics.getWidth()/2, - player.body:getY() + love.graphics.getHeight()/2
 end
 
+
+function love.textedited(text, start, length)
+    -- for IME input
+    suit.textedited(text, start, length)
+end
+
+function love.textinput(t)
+	suit.textinput(t)
+end
+
+function love.keypressed(key)
+	suit.keypressed(key)
+end
+
 function love.draw()
     love.graphics.clear()
     love.graphics.reset()
@@ -157,6 +195,7 @@ function love.draw()
     local maxBoundY = math.floor(player.body:getY() + love.graphics:getHeight() / 2  + mapgen.cellsize)
 
     -- move according to player
+    suit.draw()
     love.graphics.translate(getTranslate())
     -- draw the world
     drawWorld(minBoundX, minBoundY, maxBoundX, maxBoundY)
@@ -171,7 +210,7 @@ function love.draw()
     yH = yH - love.graphics.getHeight() / 2
     -- draw enemies
     for i=1,3 do
-	    objects.enemies[i]:draw(xH, yH)
+        objects.enemies[i]:draw(xH, yH)
     end
 
     player:draw()
