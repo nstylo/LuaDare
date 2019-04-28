@@ -5,7 +5,7 @@ function love.load()
     world = love.physics.newWorld(0, 0, true)
     world:setCallbacks(beginContact, endContact, preSolve, postSolve)
     t, shakeDuration, shakeMagnitude = 0, -1, 0 -- initialization for camera shaking parameters
-    MAX_TOUCHING = 5 -- number of times the bullets can bounce before die
+    MAX_TOUCHING = 3 -- number of times the bullets can bounce before die
 
     -- Generate map
     MapGenerator = require("MapGenerator")
@@ -21,8 +21,7 @@ function love.load()
     -- stores objects to draw and physics
     objects.static = {} -- static world objects
     objects.head= {} -- player
-    objects.wpn = {} -- weapon
-    initializePlayer(objects.head, objects.wpn, centre_map_x, centre_map_y)
+    initializePlayer(objects.head, centre_map_x, centre_map_y)
     initializeMap(objects.static)
 
     -- contains the bullets
@@ -44,33 +43,54 @@ end
 
 function love.update(dt)
     world:update(dt)
-
     if t < shakeDuration then
         t = t + dt
     end
 
-    headbody = objects.head.body
-    head_x, head_y = headbody:getPosition()
-    kybrd = love.keyboard
-    weaponbody = objects.wpn.body
+    headbody = objects.head.body -- player body
+    kybrd = love.keyboard -- keyboard object
     mouse = love.mouse
-
-    x_cur, y_cur = headbody:getLinearVelocity()
-    mouse_x, mouse_y = mouse.getPosition()
-    wpn_x, wpn_y = weaponbody:getPosition()
-    -- update player angle and velocity
-    --
+    -- get current position
     head_x, head_y = headbody:getPosition()
+    -- get current velocity
+    x_cur, y_cur = headbody:getLinearVelocity()
     -- update player angle and velocity
     headbody:setLinearVelocity(getPlayerVelocity(x_cur, y_cur, kybrd))
-    headbody:setAngle(getPlayerAngle(mouse, weaponbody))
+    headbody:setAngle(getPlayerAngle(mouse, headbody)) 
+    -- update player angle and velocity
+    headbody:setLinearVelocity(getPlayerVelocity(x_cur, y_cur, kybrd))
     -- shoot if necessary
     if shouldShoot(mouse) then
-        bullet_amount = (bullet_amount + 1) % 1000000
-        addBullet(tostring(bullet_amount))
-        shoot(weaponbody, headbody, mouse, objects.bullets[table.getn(objects.bullets)].b)
+        bullet_amount = (bullet_amount + 1) % 1000000 -- count number of bullets
+        addBullet(tostring(bullet_amount)) -- give it as a unique id
+        -- TODO:  graphics.translate within the shoot method without passing translate_x and y
+        local translate_x, translate_y = getTranslate() -- translation coordinates
+        shoot(headbody, translate_x, translate_y, 
+            objects.head.shape:getRadius(), 
+            mouse, objects.bullets[table.getn(objects.bullets)].b)
     end
+
+    processBullets()
+    -- dont rotate the player
     headbody:setAngularVelocity(0)
+end
+
+-- processes the physics of bullets
+function processBullets()
+    for i=1,#objects.bullets do
+        local vel_x, vel_y = objects.bullets[i].b:getLinearVelocity()
+        local vel_length = math.sqrt(vel_x * vel_x + vel_y * vel_y)
+        if vel_length < bullet_speed then
+            vel_x = (bullet_speed / vel_length) * vel_x
+            vel_y = (bullet_speed / vel_length) * vel_y
+            objects.bullets[i].b:setLinearVelocity(vel_x, vel_y)
+        end
+    end
+end
+
+-- gets camera translation to map from screen space to world space
+function getTranslate()
+    return -objects.head.body:getX() + love.graphics.getWidth()/2, -objects.head.body:getY() + love.graphics.getHeight()/2
 end
 
 function love.draw()
@@ -82,11 +102,9 @@ function love.draw()
     local x_bound_max = math.floor(objects.head.body:getX() + love.graphics:getWidth() / 2 + mapgen.cellsize)
     local y_bound_max = math.floor(objects.head.body:getY() + love.graphics:getHeight() / 2  + mapgen.cellsize)
     -- move according to player
-    love.graphics.translate(math.floor(-objects.head.body:getX() + love.graphics.getWidth() / 2), math.floor(-objects.head.body:getY() + love.graphics.getHeight() / 2))
+    love.graphics.translate(getTranslate())
     -- draw the player
     love.graphics.circle("line", objects.head.body:getX() , objects.head.body:getY(), objects.head.shape:getRadius())
-    -- draw the weapon object
-    love.graphics.polygon("line", objects.wpn.body:getWorldPoints(objects.wpn.shape:getPoints()))
     -- draw the world
     drawWorld(x_bound_min, y_bound_min, x_bound_max, y_bound_max)
     -- draw the bullets
@@ -95,10 +113,7 @@ function love.draw()
     --shakeScreen()
 end
 
-function initializePlayer(player_container, weapon_container, player_x, player_y)
-    weapon_width = 1
-    weapon_height = 5
-    -- player
+function initializePlayer(player_container, player_x, player_y)
     player_container.body = love.physics.newBody(world, player_x, player_y, "dynamic")
     player_container.body:setMass(1)
     player_container.body:setAngularVelocity(0)
@@ -106,15 +121,6 @@ function initializePlayer(player_container, weapon_container, player_x, player_y
     player_container.fixture = love.physics.newFixture(player_container.body, player_container.shape)
     player_container.fixture:setRestitution(0)
     player_container.fixture:setUserData("head")
-    --player_container.body:setInertia(50)
-    -- starting weapon
-    weapon_container.body = love.physics.newBody(world, player_x, player_y + 2*weapon_height, "dynamic")
-    weapon_container.shape = love.physics.newRectangleShape(weapon_width, weapon_height)
-    weapon_container.fixture = love.physics.newFixture(weapon_container.body, weapon_container.shape)
-    weapon_container.fixture:setUserData("Weapon")
-    -- join the weapon and the player
-    player = love.physics.newWeldJoint(player_container.body, weapon_container.body, player_x, player_y)
-    player:setDampingRatio(0)
 end
 
 -- init map in world
@@ -168,8 +174,8 @@ function addBullet(name)
     bullet.b = love.physics.newBody(world, 10, 10, "dynamic")
     bullet.s = love.physics.newCircleShape(objects.head.shape:getRadius() * 0.5) -- shape of the bullet
     bullet.f = love.physics.newFixture(bullet.b,bullet.s) -- add physics
-    bullet.f:setRestitution(1) -- bouncy stuff
-    bullet.f:setUserData(name)
+    bullet.f:setRestitution(0.2) -- determine how bouncy this be
+    bullet.f:setUserData(name) -- unique id of the bullet
     bullet.b:setActive(false)
     bullet.b:setBullet(true)
     bullet.touched = 0
