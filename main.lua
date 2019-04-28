@@ -9,8 +9,8 @@ function love.load()
 
     -- Generate map
     MapGenerator = require("MapGenerator")
-    mapgen = MapGenerator:new(200, 200, 10, 35)
-    mapgen:doDrunkardsWalk(0.3)
+    mapgen = MapGenerator:new(180, 180, 10, 32)
+    mapgen:doDrunkardsWalk(0.2)
     mapgen:exportToFile("test.txt")
 
     -- centre of map
@@ -33,7 +33,7 @@ function love.load()
     -- love.window.setMode(mapgen.sizeX * mapgen.cellsize, mapgen.sizeY * mapgen.cellsize)
 
     -- load textures
-    rock = love.graphics.newImage("/assets/bricks/bricks_2.png")
+    rock = love.graphics.newImage("/assets/dirt1.jpg")
     rock_width = rock:getWidth()
     rock_height = rock:getHeight()
 end
@@ -81,7 +81,7 @@ function love.draw()
     love.graphics.translate(math.floor(-objects.head.body:getX() + love.graphics.getWidth() / 2), math.floor(-objects.head.body:getY() + love.graphics.getHeight() / 2))
     -- draw the player
     love.graphics.circle("line", objects.head.body:getX() , objects.head.body:getY(), objects.head.shape:getRadius())
-        -- draw the weapon object
+    -- draw the weapon object
     love.graphics.polygon("line", objects.wpn.body:getWorldPoints(objects.wpn.shape:getPoints()))
     -- draw the world
     drawWorld(x_bound_min, y_bound_min, x_bound_max, y_bound_max)
@@ -135,23 +135,22 @@ function initializeMap(world_blocks)
     end
 end
 
-function drawMapBlock(r, g, b, i, tex_x, tex_y)
-    love.graphics.setColor(r, g, b)
-    love.graphics.polygon("line", objects.static[i].body:getWorldPoints(objects.static[i].shape:getPoints()))
+-- draws block
+function drawMapBlock(i)
+    love.graphics.polygon("fill", objects.static[i].body:getWorldPoints(objects.static[i].shape:getPoints()))
     love.graphics.draw(rock, math.floor(objects.static[i].body:getX() - mapgen.cellsize / 2), math.floor(objects.static[i].body:getY() - mapgen.cellsize / 2))
 end
 
+-- draws the world
 function drawWorld(x_bound_min, y_bound_min, x_bound_max, y_bound_max)
-    -- draw the world
     for i = 1, #objects.static do
         local rect_x, rect_y = objects.static[i].body:getPosition() -- get rectangle position
         -- if draw iff not out of bounds
         if rect_x > x_bound_min and rect_x < x_bound_max and rect_y < y_bound_max and rect_y > y_bound_min then
-            drawMapBlock(165,42,42,i)
+            drawMapBlock(i)
         end
     end
 end
-
 
 function startShake(duration, magnitude)
     t, shakeDuration, shakeMagnitude = 0, duration or 1, magnitude or 5
@@ -168,10 +167,11 @@ function addBullet(name)
     bullet.f:setRestitution(1) -- bouncy stuff
     bullet.f:setUserData(name)
     bullet.b:setActive(false)
-    bullet.b:setBullet(true) 
+    bullet.b:setBullet(true)
     bullet.touched = 0
     table.insert(objects.bullets, bullet)
 end
+
 -- collision callbacks
 function beginContact(a, b, coll)
     -- update number of times a bullet touched
