@@ -13,6 +13,7 @@ local suit = require 'suit'
 
 function love.load()
     input = {text = ""}
+    fps = love.timer.getFPS()
     -- player constants
     local PLAYER_VELOCITY = 200
     local HEALTH = 100
@@ -65,25 +66,29 @@ function love.load()
     dirt = love.graphics.newImage("/assets/dirt1.jpg")
 
     hearts = {}
-    for i = 1, 10 do
+    for i = 1, math.floor(player.health / 10) do
         hearts[i] = love.graphics.newImage("/assets/heart/heart pixel art 32x32.png")
     end
 
     musicTrack = love.audio.newSource("/assets/sounds/track.mp3", "static")
     musicTrack:setLooping(true)
-    --musicTrack:play()
+    musicTrack:play()
 end
 
 function love.update(dt)
+    if player:isDead() then
+        dt = dt / 16
+    end
+
     world:update(dt)
     tmpGun:update(dt)
 
     -- put the layout origin at position (0, 0) screen space
     -- the layout will grow down and to the right from this point
-    suit.layout:reset(50, 50)
+    suit.layout:reset(20, 90)
 
     -- put an input widget at the layout origin, with a cell size of 200 by 30 pixels
-    suit.Input(input, suit.layout:row(200,30))
+    suit.Input(input, suit.layout:row(50, 20))
 
     -- put a label that displays the text below the first cell
     -- the cell size is the same as the last one (200x30 px)
@@ -105,7 +110,7 @@ function love.update(dt)
     player:update(dt, kybrd)
     local curGun = player:getGun()
 
-    if curGun:shouldShoot(mouse) then
+    if curGun:shouldShoot(mouse) and not player:isDead() then
         local translateX, translateY = getTranslate()
         bulletCount = (bulletCount + 1) % 10000
 
@@ -193,13 +198,30 @@ function love.draw()
     -- translate back to screen space
     love.graphics.translate(player.body:getX() - love.graphics:getWidth()/2, player.body:getY() - love.graphics:getHeight()/2)
 
+    -- print health hearts
     for i = 1, math.floor(player.health / 10) do
-        print(player.health)
-
-        love.graphics.draw(hearts[1], 32*i, 15)
+        love.graphics.draw(hearts[i], 32 * i, 30)
     end
-    suit.draw()
+    printFPS() -- print fps counter
 
+    suit.draw() -- prit gui
+
+    -- player died event
+    if player:isDead() then
+        player.velocity = 0
+        font = love.graphics.newFont(200)
+        love.graphics.setFont(font)
+        wasted = "WASTED" -- text on death
+        love.graphics.print(wasted, (love.graphics.getWidth() / 2) - font:getWidth(wasted) / 2, (love.graphics.getHeight() / 2) - font:getHeight(wasted) / 2)
+    end
+end
+
+-- print FPS
+function printFPS()
+    font = love.graphics.newFont(14)
+    love.graphics.setFont(font)
+
+    love.graphics.print("FPS: " .. tostring(love.timer.getFPS()), 5, 5)
 end
 
 function initializePlayer(playerContainer, playerX, playerY)

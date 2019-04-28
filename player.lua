@@ -12,7 +12,7 @@ left = "a"
 right = "d"
 
 -- param velocity: speed of the player
--- param startingGun: starting gun 
+-- param startingGun: starting gun
 -- param health: starting health
 -- param world: the love2d world of the player
 -- param startX,startY: world space starting coordinates
@@ -41,6 +41,11 @@ function Player:giveGun(newGun)
     -- TODO: support multiple guns
     self.gun = newGun
 end
+
+function Player:isDead()
+    return self.health <= 0
+end
+
 
 -- getter for the gun
 function Player:getGun()
@@ -117,7 +122,7 @@ end
 
 function Player:draw()
     love.graphics.setColor(1, 1, 1)
-    love.graphics.circle("line", self.body:getX() , self.body:getY(), self.shape:getRadius())
+    love.graphics.circle("fill", self.body:getX() , self.body:getY(), self.shape:getRadius())
 end
 
 function Player:update(dt, kybrd)
