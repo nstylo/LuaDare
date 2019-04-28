@@ -2,8 +2,7 @@ require("player")
 
 function love.load()
     love.physics.setMeter(64)
-    world = love.physics.newWorld(0, 0, true)
-    world:setCallbacks(beginContact, endContact, preSolve, postSolve)
+    world = love.physics.newWorld(0, 0, true) world:setCallbacks(beginContact, endContact, preSolve, postSolve)
     t, shakeDuration, shakeMagnitude = 0, -1, 0 -- initialization for camera shaking parameters
     MAX_TOUCHING = 5 -- number of times the bullets can bounce before die
 
@@ -68,10 +67,10 @@ end
 function love.draw()
     love.graphics.reset()
     -- screen bounds in world space
-    local x_bound_min = objects.head.body:getX() - love.graphics.getWidth() / 2
-    local y_bound_min = objects.head.body:getY() - love.graphics.getHeight() / 2
-    local x_bound_max = objects.head.body:getX() + love.graphics.getWidth() / 2
-    local y_bound_max = objects.head.body:getY() + love.graphics.getHeight() / 2
+    local x_bound_min = objects.head.body:getX() - love.graphics:getWidth() / 2 - mapgen.cellsize
+    local y_bound_min = objects.head.body:getY() - love.graphics:getHeight() / 2 - mapgen.cellsize
+    local x_bound_max = objects.head.body:getX() + love.graphics:getWidth() / 2 + mapgen.cellsize
+    local y_bound_max = objects.head.body:getY() + love.graphics:getHeight() / 2  + mapgen.cellsize
     -- shake the screen
     shakeScreen()
     -- move according to player
@@ -136,12 +135,12 @@ function drawMapBlock(r, g, b, indice)
     love.graphics.polygon("fill", objects.static[indice].body:getWorldPoints(objects.static[indice].shape:getPoints()))
 end
 
-function drawWorld(x_bound_min, x_bound_max, y_bound_min, y_bound_max)
+function drawWorld(x_bound_min, y_bound_min, x_bound_max, y_bound_max)
     -- draw the world
     for i = 1, #objects.static do
         local rect_x, rect_y = objects.static[i].body:getPosition() -- get rectangle position
         -- if draw iff not out of bounds
-        if not (rect_x < x_bound_min and rect_x > x_bound_max and rect_y < y_bound_min and rect_y > y_bound_max) then
+        if rect_x > x_bound_min and rect_x < x_bound_max and rect_y < y_bound_max and rect_y > y_bound_min then
             drawMapBlock(165,42,42,i)
         end
     end
@@ -195,7 +194,7 @@ end
 -- shakes the screen
 function shakeScreen()
     if t < shakeDuration and #objects.bullets > 1 then -- if we bullets exist
-        startShake(0.5, 2) -- shake
+        startShake(0.5, 3) -- shake
     end
     if t < shakeDuration then -- if duration not passed
         local dx = love.math.random(-shakeMagnitude, shakeMagnitude) -- shake randomly
@@ -209,10 +208,7 @@ function drawBullets(x_bound_min, y_bound_min, x_bound_max, y_bound_max)
         -- get location of the bullet
         local bullet_x, bullet_y = objects.bullets[i].b:getPosition()
         -- if out of bounds for screen
-        if (bullet_x < x_bound_min or bullet_y < y_bound_min
-            or bullet_x > x_bound_max or bullet_y > y_bound_max) or 
-            -- if the number of touchings more than 5
-            tonumber(objects.bullet_touching[objects.bullets[i].f:getUserData()]) > MAX_TOUCHING then
+        if tonumber(objects.bullet_touching[objects.bullets[i].f:getUserData()]) > MAX_TOUCHING then -- if the number of touchings more than 5
             -- destroy the bullet
             objects.bullets[i].b:destroy()
             -- remove it from the array
