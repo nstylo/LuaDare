@@ -1,8 +1,9 @@
 --! file: player.lua
-velocity = 500
-bullet_speed = 5
-bullet_force = 50
-body_pushback = 10
+velocity = 200
+bullet_speed = 800
+bullet_force = 500
+body_pushback = 1000
+accuracy = 0
 
 up = "w"
 down = "s"
@@ -22,48 +23,48 @@ function setPlayerVelocity(vel)
     velocity = vel
 end
 
-function getPlayerVelocity(cur_vel_x, cur_vel_y, kybrd)
-    y_changed = false
-    x_changed = false
-    x_velocity = cur_vel_x
-    y_velocity = cur_vel_y
+function getPlayerVelocity(currentVelX, currentVelY, kybrd)
+    changedY = false
+    changedX = false
+    velocityX = currentVelX
+    velocityY = currentVelY
 
     if kybrd.isDown(up) then
-        y_changed = true
-        y_velocity = -1 * velocity
+        changedY = true
+        velocityY = -1 * velocity
     else
-        x_velocity = cur_vel_x
-        y_velocity = 0
+        velocityX = currentVelX
+        velocityY = 0
     end
 
     if  kybrd.isDown(down) then
-        x_velocity = cur_vel_x
-        y_velocity = velocity
-    elseif not y_changed then
-        x_velocity = cur_vel_x
-        y_velocity = 0
+        velocityX = currentVelX
+        velocityY = velocity
+    elseif not changedY then
+        velocityX = currentVelX
+        velocityY = 0
     end
 
-    cur_vel_x, cur_vel_y = x_velocity, y_velocity
+    currentVelX, currentVelY = velocityX, velocityY
 
     if  kybrd.isDown(left) then
-        x_velocity = -1 * velocity
-        y_velocity = cur_vel_y
-        x_changed = true
+        velocityX = -1 * velocity
+        velocityY = currentVelY
+        changedX = true
     else
-        x_velocity = 0
-        y_velocity = cur_vel_y
+        velocityX = 0
+        velocityY = currentVelY
     end
 
     if kybrd.isDown(right) then
-        x_velocity = velocity
-        y_velocity = cur_vel_y
-    elseif not x_changed then
-        x_velocity = 0
-        y_velocity = cur_vel_y
+        velocityX = velocity
+        velocityY = currentVelY
+    elseif not changedX then
+        velocityX = 0
+        velocityY = currentVelY
     end
 
-    return x_velocity, y_velocity
+    return velocityX, velocityY
 end
 
 function getPlayerAngle(mouse, head)
@@ -99,8 +100,13 @@ function shoot(head, translate_x, translate_y, head_radius, mouse, bullet)
     -- transfer bullet accross this vector by distance of radius
     bullet:setX(head_x + to_mouse_x * bullet_distance)
     bullet:setY(head_y + to_mouse_y * bullet_distance)
-    -- apply forces and speed to the bullet
+    -- apply forces
     bullet:applyForce(to_mouse_x * bullet_force,  to_mouse_y * bullet_force)
-    bullet:setLinearVelocity(to_mouse_x * bullet_force,  to_mouse_y * bullet_force)
+    -- apply innacuracy
+    bullet:applyForce((1-accuracy) * math.random(200, 300),  (1-accuracy) * math.random(200, 300))
+    --speed to the bullet
+    bullet:setLinearVelocity(to_mouse_x * bullet_speed,  to_mouse_y * bullet_speed)
+    -- apply pushback
+    head:applyForce(-to_mouse_x * body_pushback, -to_mouse_y * body_pushback)
     bullet:setActive(true)
 end
