@@ -36,16 +36,29 @@ function love.load()
     Enemy = require("enemy")
     objects.enemies = {}
     for i=1,10 do
-	    print("enemy"..i)
-	    local myX = math.random(centre_map_x, centre_map_x + 1000)
-	    local myY = math.random(centre_map_y - 500, centre_map_y + 1000)
-	    print(myX.." "..myY)
-	    --objects.enemies[i] = Enemy:new(1, 2, 3, 4)
-	    objects.enemies[i] = Enemy:new(enemy_counter, myX, myY, 16, 500, world)
-        counter = enemy_counter + 1
+	            -- declare spawnpoints
+        local spawnX
+        local spawnY
+
+        -- find valid spawnpositions
+        while true do
+            spawnX = math.random(1, mapgen.sizeX)
+            spawnY = math.random(1, mapgen.sizeY)
+
+            -- if spawnpoint is a path then its a valid spawnpoint
+            if mapgen.grid[spawnX][spawnY] == 1 then
+                break
+            end
+        end
+
+        -- translate valid block to valid ws-coordinates
+	    spawnX = ((spawnX - 1) * mapgen.cellsize) + (mapgen.cellsize / 2)
+	    spawnY = ((spawnY - 1) * mapgen.cellsize) + (mapgen.cellsize / 2)
+
+        -- set enemies
+	    objects.enemies[i] = Enemy:new(enemy_counter, spawnX, spawnY, 32, 500, world)
+	    enemy_counter = enemy_counter + 1
     end
-    -- hack to store which enemies should die
-    objects.toDie = {}
 
     -- load textures
     wall = love.graphics.newImage("/assets/bricks/bricks_0.png")
@@ -236,14 +249,15 @@ end
 function beginContact(a, b, coll)
     -- update number of times a bullet touched
     if tonumber(b:getUserData()) ~= nil then
-	    if string.sub(a:getUserData(), 1, 5) == "enemy" then
-		print("bullet touch enemy")
+	if string.sub(a:getUserData(), 1, 5) == "enemy" then
 	        -- delete the enemy
 		local idx = tonumber(string.sub(a:getUserData(), 6))
-		print("enemy " .. idx)
+		print("enemy died:" .. idx)
+		objects.enemies[idx].destroy()
+		table.remove(objects.enemies[idx])
 	    else
 	        -- bounce off wall
-            objects.bullet_touching[b:getUserData()] = objects.bullet_touching[b:getUserData()] + 1
+            	objects.bullet_touching[b:getUserData()] = objects.bullet_touching[b:getUserData()] + 1
 	    end
     elseif tonumber(a:getUserData()) ~= nil then
 	    if string.sub(a:getUserData(), 1, 5) == "enemy" then

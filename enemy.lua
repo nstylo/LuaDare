@@ -78,4 +78,8 @@ function Enemy:getIndex()
 	return self.index
 end
 
+function Enemy:destroy()
+	self.body:destroy()
+end
+
 return Enemy
