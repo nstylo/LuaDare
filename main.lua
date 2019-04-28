@@ -13,6 +13,7 @@ function love.load()
     -- player constants
     local PLAYER_VELOCITY = 200
     local HEALTH = 100
+    NUM_ENEMIES = 10
 
     love.physics.setMeter(64)
     world = love.physics.newWorld(0, 0, true)
@@ -51,34 +52,7 @@ function love.load()
     bulletCount = 0 -- amount of bullets
 
     -- create enemies
-    enemy_counter = 0
-    Enemy = require("enemy")
-    objects.enemies = {}
-
-    for i = 1, 3 do
-        -- declare spawnpoints
-        local spawnX
-        local spawnY
-
-        -- find valid spawnpositions
-        while true do
-            spawnX = math.random(1, mapgen.sizeX)
-            spawnY = math.random(1, mapgen.sizeY)
-
-            -- if spawnpoint is a path then its a valid spawnpoint
-            if mapgen.grid[spawnX][spawnY] == 1 then
-                break
-            end
-        end
-
-        -- translate valid block to valid ws-coordinates
-	    spawnX = ((spawnX - 1) * mapgen.cellsize) + (mapgen.cellsize / 2)
-	    spawnY = ((spawnY - 1) * mapgen.cellsize) + (mapgen.cellsize / 2)
-
-        -- set enemies
-	    objects.enemies[i] = Enemy:new(enemy_counter, spawnX, spawnY, 32, 300, world)
-	    enemy_counter = enemy_counter + 1
-    end
+    createEnemies()
 
     -- load textures
     wall = love.graphics.newImage("/assets/bricks/bricks_0.png")
@@ -121,7 +95,7 @@ function love.update(dt)
 
     processBullets(curGun.speed)
 
-    for i = 1, 3 do
+    for i = 1,NUM_ENEMIES do
         objects.enemies[i]:update(player.body:getX(), player.body:getY())
     end
 
@@ -170,7 +144,7 @@ function love.draw()
     xH = xH - love.graphics.getWidth() / 2
     yH = yH - love.graphics.getHeight() / 2
     -- draw enemies
-    for i=1,3 do
+    for i=1,NUM_ENEMIES do
 	    objects.enemies[i]:draw(xH, yH)
     end
 
@@ -272,9 +246,8 @@ function beginContact(a, b, coll)
         if string.sub(a:getUserData(), 1, 5) == "enemy" then
             -- delete the enemy
             local idx = tonumber(string.sub(a:getUserData(), 6))
-            print("enemy died:" .. idx)
-            -- objects.enemies[idx].destroy()
-            -- table.remove(objects.enemies[idx])
+                objects.enemies[idx]:destroy()
+                objects.bulletTouching[b:getUserData()] = player:getGun().maxCollisions + 1
         else
             -- bounce off wall
             objects.bulletTouching[b:getUserData()] = objects.bulletTouching[b:getUserData()] + 1
@@ -328,6 +301,38 @@ function drawBullets(minBoundX, minBoundY, maxBoundX, maxBoundY)
             love.graphics.setColor(unpack(tmpGun.bulletColor))
             love.graphics.circle("fill", objects.bullets[i].b:getX(), objects.bullets[i].b:getY(), objects.bullets[i].s:getRadius())
         end
+    end
+end
+
+function createEnemies()
+    -- create enemies
+    enemy_counter = 1 -- counting enemy ID
+    Enemy = require("enemy")
+    objects.enemies = {}
+
+    for i = 1,NUM_ENEMIES do
+        -- declare spawnpoints
+        local spawnX
+        local spawnY
+
+        -- find valid spawnpositions
+        while true do
+            spawnX = math.random(1, mapgen.sizeX)
+            spawnY = math.random(1, mapgen.sizeY)
+
+            -- if spawnpoint is a path then its a valid spawnpoint
+            if mapgen.grid[spawnX][spawnY] == 1 then
+                break
+            end
+        end
+
+        -- translate valid block to valid ws-coordinates
+	    spawnX = ((spawnX - 1) * mapgen.cellsize) + (mapgen.cellsize / 2)
+	    spawnY = ((spawnY - 1) * mapgen.cellsize) + (mapgen.cellsize / 2)
+
+        -- set enemies
+	    objects.enemies[i] = Enemy:new(enemy_counter, spawnX, spawnY, 32, 300, world)
+	    enemy_counter = enemy_counter + 1
     end
 end
 
