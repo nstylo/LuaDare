@@ -282,22 +282,27 @@ end
 function beginContact(a, b, coll)
     -- update number of times a bullet touched
     if tonumber(b:getUserData()) ~= nil then
+	bulletCollision(a, b)
+    elseif tonumber(a:getUserData()) ~= nil then
+	bulletCollision(b, a)
+    end
+end
+
+function bulletCollision(a, b)
+    -- update number of times a bullet touched
         if string.sub(a:getUserData(), 1, 5) == "enemy" then
             -- delete the enemy
             local idx = tonumber(string.sub(a:getUserData(), 6))
-            objects.enemies[idx]:destroy()
-            objects.bulletTouching[b:getUserData()] = player:getGun().maxCollisions + 1
+	    if objects.enemies[idx].hp < 0 then
+            	objects.enemies[idx]:destroy()
+            	objects.bulletTouching[b:getUserData()] = player:getGun().maxCollisions + 1
+	    else
+		objects.enemies[idx].hp = objects.enemies[idx].hp - 20
+	    end
         else
             -- bounce off wall
             objects.bulletTouching[b:getUserData()] = objects.bulletTouching[b:getUserData()] + 1
         end
-    elseif tonumber(a:getUserData()) ~= nil then
-        if string.sub(a:getUserData(), 1, 5) == "enemy" then
-            -- delete the enemy
-        else
-            objects.bulletTouching[a:getUserData()] = objects.bulletTouching[a:getUserData()] + 1
-        end
-    end
 end
 
 function endContact(a, b, coll)
