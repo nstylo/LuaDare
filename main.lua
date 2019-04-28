@@ -9,7 +9,7 @@ function love.load()
 
     -- Generate map
     MapGenerator = require("MapGenerator")
-    mapgen = MapGenerator:new(1000, 1000, 5, 32)
+    mapgen = MapGenerator:new(100, 100, 5, 32)
     mapgen:doDrunkardsWalk(0.5)
     mapgen:exportToFile("test.txt")
 
@@ -36,9 +36,9 @@ function love.load()
     objects.enemies = {}
 
     -- load textures
-    rock = love.graphics.newImage("/assets/dirt1.jpg")
-    rock_width = rock:getWidth()
-    rock_height = rock:getHeight()
+    wall = love.graphics.newImage("/assets/bricks/bricks_0.png")
+    dirt = love.graphics.newImage("/assets/dirt1.jpg")
+
 end
 
 function love.update(dt)
@@ -101,6 +101,7 @@ function love.draw()
     local y_bound_min = math.floor(objects.head.body:getY() - love.graphics:getHeight() / 2 - mapgen.cellsize)
     local x_bound_max = math.floor(objects.head.body:getX() + love.graphics:getWidth() / 2 + mapgen.cellsize)
     local y_bound_max = math.floor(objects.head.body:getY() + love.graphics:getHeight() / 2  + mapgen.cellsize)
+
     -- move according to player
     love.graphics.translate(getTranslate())
     -- draw the player
@@ -111,6 +112,8 @@ function love.draw()
     drawBullets(x_bound_min, y_bound_min, x_bound_max, y_bound_max)
     -- shake the screen
     --shakeScreen()
+    -- draw the player
+    love.graphics.circle("line", objects.head.body:getX() , objects.head.body:getY(), objects.head.shape:getRadius())
 end
 
 function initializePlayer(player_container, player_x, player_y)
@@ -128,7 +131,9 @@ function initializeMap(world_blocks)
     key = 0 -- key to access index
     for i = 1, mapgen.sizeX do -- for each coordinate combination
         for j = 1, mapgen.sizeY do
-            if mapgen.grid[i][j] == 0 then
+
+            -- if path, ignore
+            if mapgen.grid[i][j] ~= 1 then
                 -- map index to world space
                 local worldX = (i - 1) * mapgen.cellsize
                 local worldY = (j - 1) * mapgen.cellsize
@@ -138,8 +143,16 @@ function initializeMap(world_blocks)
                 world_blocks[key] = {}
                 world_blocks[key].body = love.physics.newBody(world, worldX, worldY, "static")
                 world_blocks[key].shape = love.physics.newRectangleShape(mapgen.cellsize, mapgen.cellsize)
+            end
+
+            -- for each block change properties
+            if mapgen.grid[i][j] == -1 then
                 world_blocks[key].fixture = love.physics.newFixture(world_blocks[key].body, world_blocks[key].shape)
-                world_blocks[key].fixture:setUserData("block")
+                world_blocks[key].fixture:setUserData("indestructible")
+            end
+            if mapgen.grid[i][j] == 0 then
+                world_blocks[key].fixture = love.physics.newFixture(world_blocks[key].body, world_blocks[key].shape)
+                world_blocks[key].fixture:setUserData("wall")
             end
         end
     end
@@ -147,8 +160,17 @@ end
 
 -- draws block
 function drawMapBlock(i)
-    love.graphics.polygon("fill", objects.static[i].body:getWorldPoints(objects.static[i].shape:getPoints()))
-    love.graphics.draw(rock, math.floor(objects.static[i].body:getX() - mapgen.cellsize / 2), math.floor(objects.static[i].body:getY() - mapgen.cellsize / 2))
+    -- choose texture per block
+    local texture = nil
+    if objects.static[i].fixture:getUserData() == "wall" then
+        texture = wall
+    else
+        texture  = dirt
+    end
+
+    -- draw polygon and texture
+    love.graphics.polygon("line", objects.static[i].body:getWorldPoints(objects.static[i].shape:getPoints()))
+    love.graphics.draw(texture, math.floor(objects.static[i].body:getX() - mapgen.cellsize / 2), math.floor(objects.static[i].body:getY() - mapgen.cellsize / 2))
 end
 
 -- draws the world
