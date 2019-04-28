@@ -17,7 +17,7 @@ function love.load()
     -- player constants
     local PLAYER_VELOCITY = 200
     local HEALTH = 100
-    NUM_ENEMIES = 10
+    NUM_ENEMIES = 3
 
     roundOver = false
 
@@ -44,9 +44,6 @@ function love.load()
     colorTest = {244, 219, 0}
     tmpGun = GunCreator:new(0.3, 0.5, 9, 13, "assets/sounds/gun_fire.wav", tmpGun_bullet_creator, colorTest, 1)
 
-    PlayerCreator = require("player")
-    player = PlayerCreator:new(PLAYER_VELOCITY, tmpGun, mapCenterX, mapCenterY, HEALTH, world)
-
     objects = {}
     -- stores objects to draw and physics
     objects.static = {} -- static world objects
@@ -57,15 +54,20 @@ function love.load()
     objects.bulletTouching = {} -- number of times a bullet touches an object [bullet.f:getUserData()] = #times_touched
     bulletCount = 0 -- amount of bullets
 
-    -- create enemies
-    createEnemies()
-
     -- load textures
     wall = love.graphics.newImage("/assets/bricks/bricks_0.png")
     rock = love.graphics.newImage("/assets/rock texture.png")
     rock2 = love.graphics.newImage("/assets/brick texture 2.png")
     brick = love.graphics.newImage("/assets/brick texture.png")
     dirt = love.graphics.newImage("/assets/dirt1.jpg")
+    enemy_path = "assets/sprites/ducknew.png"
+    player_path = "assets/sprites/defaulthumannew.png"
+
+    PlayerCreator = require("player")
+    player = PlayerCreator:new(PLAYER_VELOCITY, tmpGun, mapCenterX, mapCenterY, HEALTH, world, player_path)
+
+    -- create enemies
+    createEnemies()
 
     hearts = {}
     for i = 1, math.floor(player.health / 10) do
@@ -208,6 +210,7 @@ function love.draw()
     xH, yH = headbody:getPosition()
     xH = xH - love.graphics.getWidth() / 2
     yH = yH - love.graphics.getHeight() / 2
+
     -- draw enemies
     for i = 1, NUM_ENEMIES do
         objects.enemies[i]:draw(xH, yH)
@@ -451,7 +454,7 @@ function createEnemies()
         spawnY = ((spawnY - 1) * mapgen.cellsize) + (mapgen.cellsize / 2)
 
         -- set enemies
-        objects.enemies[i] = Enemy:new(enemy_counter, spawnX, spawnY, 32, 300, world, 5)
+        objects.enemies[i] = Enemy:new(enemy_counter, spawnX, spawnY, 32, 300, world, 5, enemy_path)
         enemy_counter = enemy_counter + 1
     end
 end

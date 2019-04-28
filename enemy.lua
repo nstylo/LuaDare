@@ -16,7 +16,7 @@ function Enemy:new(index, startX, startY, size, speed, world, strength, texture)
     this.yOff = startY
 
     -- texture
-    this.texture = texture
+    this.texture = love.graphics.newImage(texture)
 
     -- stats
     this.hp = 30
@@ -40,8 +40,10 @@ end
 function Enemy:draw()
     --love.graphics.draw(texture, math.floor(objects.static[i].body:getX() - mapgen.cellsize / 2), math.floor(objects.static[i].body:getY() - mapgen.cellsize / 2))
     if self.alive then
-        love.graphics.setColor(1,0,0)
-        love.graphics.circle("fill", self.body:getX(), self.body:getY(), self.shape:getRadius())
+        --love.graphics.setColor(1,0,0)
+        --love.graphics.circle("fill", self.body:getX(), self.body:getY(), self.shape:getRadius())
+	love.graphics.setColor(1,1,1)
+	love.graphics.draw(self.texture, self.body:getX() - 32, self.body:getY() - 32)
     end
 end
 
