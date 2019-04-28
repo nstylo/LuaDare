@@ -78,7 +78,7 @@ function Gun:shoot(head, headRadius, mouseX, mouseY)
     --bullet_body:applyForce(toMouseX * self.force, toMouseY * self.force)
     -- apply innacuracy
     bullet_body:applyForce((1 - self.acc) * math.random(-INACCURACY, INACCURACY),
-        (1 - self.acc) * math.random(-INACCURACY, INACCURACY))
+    (1 - self.acc) * math.random(-INACCURACY, INACCURACY))
     -- apply speed to the bullet
     bullet_body:setLinearVelocity(toMouseX * self.speed, toMouseY * self.speed)
     -- apply pushback to the head
