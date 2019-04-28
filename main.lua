@@ -9,8 +9,10 @@ function love.load()
 
     -- Generate map
     MapGenerator = require("MapGenerator")
+
     mapgen = MapGenerator:new(100, 100, 5, 32)
     mapgen:doDrunkardsWalk(0.5)
+
     mapgen:exportToFile("test.txt")
 
     -- centre of map
@@ -56,7 +58,7 @@ function love.update(dt)
     x_cur, y_cur = headbody:getLinearVelocity()
     -- update player angle and velocity
     headbody:setLinearVelocity(getPlayerVelocity(x_cur, y_cur, kybrd))
-    headbody:setAngle(getPlayerAngle(mouse, headbody)) 
+    headbody:setAngle(getPlayerAngle(mouse, headbody))
     -- update player angle and velocity
     headbody:setLinearVelocity(getPlayerVelocity(x_cur, y_cur, kybrd))
     -- shoot if necessary
@@ -65,8 +67,8 @@ function love.update(dt)
         addBullet(tostring(bullet_amount)) -- give it as a unique id
         -- TODO:  graphics.translate within the shoot method without passing translate_x and y
         local translate_x, translate_y = getTranslate() -- translation coordinates
-        shoot(headbody, translate_x, translate_y, 
-            objects.head.shape:getRadius(), 
+        shoot(headbody, translate_x, translate_y,
+            objects.head.shape:getRadius(),
             mouse, objects.bullets[table.getn(objects.bullets)].b)
     end
 
@@ -243,7 +245,7 @@ end
 
 function drawBullets(x_bound_min, y_bound_min, x_bound_max, y_bound_max)
     for i=#objects.bullets,1,-1 do
-        -- get location of the bullet
+       -- get location of the bullet
         local bullet_x, bullet_y = objects.bullets[i].b:getPosition()
         -- if out of bounds for screen
         if tonumber(objects.bullet_touching[objects.bullets[i].f:getUserData()]) > MAX_TOUCHING then -- if the number of touchings more than 5
