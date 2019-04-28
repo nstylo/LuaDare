@@ -8,8 +8,8 @@ function Enemy:new(startX, startY, size, speed, world)
 	--math.randomseed(os.time())
 
 	-- coordinates in world space
-	this.x = 0
-	this.y = 0
+	this.x = startX
+	this.y = startY
 
 	-- offset from starting position
 	this.xOff = startX
@@ -20,7 +20,7 @@ function Enemy:new(startX, startY, size, speed, world)
 	this.speed = speed
 
 	-- setup physics shit
-	this.body = love.physics.newBody(world, startX, startY, "static")
+	this.body = love.physics.newBody(world, startX, startY, "dynamic")
 	this.body:setMass(1)
 	this.body:setAngularVelocity(0)
 	this.shape = love.physics.newCircleShape(size)
@@ -39,11 +39,10 @@ function Enemy:new(startX, startY, size, speed, world)
 end
 
 function Enemy:draw()
-	local x = self.x - head_x
-	local y = self.y - head_y
+	--local x = self.x - head_x
+	--local y = self.y - head_y
 	love.graphics.setColor(1,0,0)
 	love.graphics.circle("fill", self.body:getX(), self.body:getY(), self.shape:getRadius())
-	love.graphics.reset()
 end
 
 function Enemy:update(head_x, head_y)

@@ -1,6 +1,5 @@
 --! file: player.lua
-    
-velocity = 500 
+velocity = 500
 bullet_speed = 5
 bullet_force = 50
 body_pushback = 10
@@ -9,7 +8,7 @@ up = "w"
 down = "s"
 left = "a"
 right = "d"
-shooot = 1 
+shooot = 1
 
 function setControls(_up, _down, _left, _right, _shoot)
     up = _up
@@ -34,7 +33,7 @@ function getPlayerVelocity(cur_vel_x, cur_vel_y, kybrd)
         y_velocity = -1 * velocity
     else
         x_velocity = cur_vel_x
-        y_velocity = 0 
+        y_velocity = 0
     end
 
     if  kybrd.isDown(down) then
@@ -81,17 +80,27 @@ function setBulletProperties(force, speed, pushback)
     body_pushback = pushback
 end
 
-function shoot(wpn, head, mouse, bullet)
-    wpn_x, wpn_y = wpn:getPosition()
+function shoot(head, translate_x, translate_y, head_radius, mouse, bullet)
+    -- how far away the bullet should spawn
+    bullet_distance = head_radius + 3
+    -- position of head and mouse
     head_x, head_y = head:getPosition()
     mouse_x, mouse_y = mouse:getPosition()
-    bullet:setX(wpn_x)
-    bullet:setY(wpn_y)
-    bullet:setActive(true) -- render it
-    -- move bullet
-    bullet:setLinearVelocity((wpn_x - head_x + math.random(5, 100)) * bullet_speed,  (wpn_y - head_y + math.random(5,100)) * bullet_speed)
-    -- push bulet
-    bullet:applyForce((mouse_x - wpn_x) * bullet_force, (mouse_y - wpn_y) * bullet_force)
-    -- knockback
-    head:applyForce((head_x - wpn_x) * body_pushback , (head_y - wpn_y) * body_pushback)
+    mouse_x = mouse_x + math.abs(translate_x)
+    mouse_y = mouse_y + math.abs(translate_y)
+    -- vector coords to mouse
+    to_mouse_x = mouse_x - head_x
+    to_mouse_y = mouse_y - head_y
+    -- vectors second norm
+    second_norm = math.sqrt(to_mouse_x * to_mouse_x + to_mouse_y * to_mouse_y)
+    -- normalize this vector
+    to_mouse_x = to_mouse_x / second_norm
+    to_mouse_y = to_mouse_y / second_norm
+    -- transfer bullet accross this vector by distance of radius
+    bullet:setX(head_x + to_mouse_x * bullet_distance)
+    bullet:setY(head_y + to_mouse_y * bullet_distance)
+    -- apply forces and speed to the bullet
+    bullet:applyForce(to_mouse_x * bullet_force,  to_mouse_y * bullet_force)
+    bullet:setLinearVelocity(to_mouse_x * bullet_force,  to_mouse_y * bullet_force)
+    bullet:setActive(true)
 end
