@@ -56,7 +56,7 @@ function love.load()
 	    spawnY = ((spawnY - 1) * mapgen.cellsize) + (mapgen.cellsize / 2)
 
         -- set enemies
-	    objects.enemies[i] = Enemy:new(spawnX, spawnY, 32, 500, world)
+	    objects.enemies[i] = Enemy:new(spawnX, spawnY, 32, 300, world)
     end
 
     -- load textures
@@ -97,8 +97,8 @@ function love.update(dt)
     -- dont rotate the player
     headbody:setAngularVelocity(0)
 
-    for i=1,3 do
-	    objects.enemies[i]:update(head_x, head_y)
+    for i = 1, 3 do
+	    objects.enemies[i]:update(head_x, head_y, objects.head.body:getX(), objects.head.body:getY())
     end
 
 end

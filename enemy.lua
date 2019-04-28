@@ -28,12 +28,6 @@ function Enemy:new(startX, startY, size, speed, world)
 	this.fixture:setRestitution(0)
 	this.fixture:setUserData("enemy")
 
-	-- set random movement
-	-- go horizontal
-	this.goH = (math.random(0,1) <= 0.5)
-	-- go neg
-	this.goN = (math.random(0,1) <= 0.5)
-
 	return setmetatable(this, metatable)
 
 end
@@ -43,35 +37,47 @@ function Enemy:draw()
 	love.graphics.circle("fill", self.body:getX(), self.body:getY(), self.shape:getRadius())
 end
 
-function Enemy:update()
-	xDiff = 0
-	yDiff = 0
-	if self.goH then
-		if self.goN then
-			xDiff = 1
-		else
-			xDiff = -1
-		end
-	else
-		if self.goN then
-			yDiff = 1
-		else
-			yDiff = -1
-		end
-	end
-	xDiff = xDiff * self.speed
-	yDiff = yDiff * self.speed
-	self.xOff = self.xOff + xDiff
-	self.yOff = self.yOff + yDiff
+function Enemy:update(player_x, player_y)
+    -- declare distances to player
+    local xDist
+    local yDist
 
+    -- case distinction of to set signed distance
+    if self.body:getX() >= player_x then
+        xDist = player_x - self.body:getX()
+    else
+        xDist = player_x - self.body:getX()
+    end
+    if self.body:getY() >= player_y then
+        yDist = player_y - self.body:getY()
+    else
+        yDist = player_y - self.body:getY()
+    end
 
-	self.x = self.xOff
-	self.y = self.yOff
+    -- total euclidian distance
+    totalDist = math.sqrt(xDist * xDist + yDist * yDist)
 
-	self.body:setLinearVelocity(xDiff, yDiff)
+    -- TODO: make it non-static
+    threshhold = 500
 
-	--self.body:setX(self.x)
-	--self.body:setY(self.y)
+    -- if distance to player is smaller than a certain threshhold, then move towards player
+    local xVelo = 0
+    local yVelo = 0
+    if totalDist < threshhold then
+        -- velocity vector
+        xVelo = xDist / (math.abs(xDist) + math.abs(yDist))
+        yVelo = yDist / (math.abs(xDist) + math.abs(yDist))
+    else
+        xVelo = 0
+        yVelo = 0
+    end
+
+    -- speed times wight in [0,1]
+    xVelo = xVelo * self.speed
+    yVelo = yVelo * self.speed
+
+    -- set velocity
+	self.body:setLinearVelocity(xVelo, yVelo)
 end
 
 return Enemy
