@@ -124,7 +124,7 @@ function love.update(dt)
     headbody:setAngularVelocity(0)
 
     for i = 1, 3 do
-	    objects.enemies[i]:update(head_x, head_y, objects.head.body:getX(), objects.head.body:getY())
+        objects.enemies[i]:update(headX, headY)
     end
 
 end
@@ -136,11 +136,9 @@ function processBullets(speedCap)
         local velLength = math.sqrt(velX * velX + velY * velY)
 
         if velLength < speedCap then
-            print("PREVIOUS "..velX.." "..velY)
             velX = (speedCap / velLength) * velX
             velY = (speedCap / velLength) * velY
             objects.bullets[i].b:setLinearVelocity(velX, velY)
-            print("AFTER "..velX.." "..velY)
         end
     end
 end
@@ -284,13 +282,13 @@ function beginContact(a, b, coll)
             -- table.remove(objects.enemies[idx])
         else
             -- bounce off wall
-            objects.bullet_touching[b:getUserData()] = objects.bullet_touching[b:getUserData()] + 1
+            objects.bulletTouching[b:getUserData()] = objects.bulletTouching[b:getUserData()] + 1
         end
     elseif tonumber(a:getUserData()) ~= nil then
         if string.sub(a:getUserData(), 1, 5) == "enemy" then
             -- delete the enemy
         else
-            objects.bullet_touching[a:getUserData()] = objects.bullet_touching[a:getUserData()] + 1
+            objects.bulletTouching[a:getUserData()] = objects.bulletTouching[a:getUserData()] + 1
         end
     end
 end

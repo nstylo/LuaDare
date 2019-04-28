@@ -3,38 +3,38 @@ local Enemy = {}
 local metatable = { __index = Enemy }
 
 function Enemy:new(index, startX, startY, size, speed, world)
-	local this = {}
-	--math.randomseed(os.time())
+    local this = {}
+    --math.randomseed(os.time())
 
-	this.index = index
-	-- coordinates in world space
-	this.x = startX
-	this.y = startY
+    this.index = index
+    -- coordinates in world space
+    this.x = startX
+    this.y = startY
 
-	-- offset from starting position
-	this.xOff = startX
-	this.yOff = startY
+    -- offset from starting position
+    this.xOff = startX
+    this.yOff = startY
 
-	this.hp = 1
-	this.size = size
-	this.speed = speed
+    this.hp = 1
+    this.size = size
+    this.speed = speed
 
-	-- setup physics shit
-	this.body = love.physics.newBody(world, startX, startY, "dynamic")
-	this.body:setMass(1)
-	this.body:setAngularVelocity(0)
-	this.shape = love.physics.newCircleShape(size)
-	this.fixture = love.physics.newFixture(this.body, this.shape)
-	this.fixture:setRestitution(0)
-	this.fixture:setUserData("enemy" .. this.index)
+    -- setup physics shit
+    this.body = love.physics.newBody(world, startX, startY, "dynamic")
+    this.body:setMass(1)
+    this.body:setAngularVelocity(0)
+    this.shape = love.physics.newCircleShape(size)
+    this.fixture = love.physics.newFixture(this.body, this.shape)
+    this.fixture:setRestitution(0)
+    this.fixture:setUserData("enemy" .. this.index)
 
-	return setmetatable(this, metatable)
+    return setmetatable(this, metatable)
 
 end
 
 function Enemy:draw()
-	love.graphics.setColor(1,0,0)
-	love.graphics.circle("fill", self.body:getX(), self.body:getY(), self.shape:getRadius())
+    love.graphics.setColor(1,0,0)
+    love.graphics.circle("fill", self.body:getX(), self.body:getY(), self.shape:getRadius())
 end
 
 function Enemy:update(player_x, player_y)
@@ -77,15 +77,15 @@ function Enemy:update(player_x, player_y)
     yVelo = yVelo * self.speed
 
     -- set velocity
-	self.body:setLinearVelocity(xVelo, yVelo)
+    self.body:setLinearVelocity(xVelo, yVelo)
 end
 
 function Enemy:getIndex()
-	return self.index
+    return self.index
 end
 
 function Enemy:destroy()
-	self.body:destroy()
+    self.body:destroy()
 end
 
 return Enemy
