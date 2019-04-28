@@ -19,7 +19,7 @@ function MapGenerator:new(sizeX, sizeY, numWalkers, cellsize)
 
     this.numFloors = 0 -- number of floors
     this.minWalkers = 1 -- minimum number of walkers allowed to exist
-    this.maxWalkers = 15 -- maximum number of walkers allowed to exist
+    this.maxWalkers = 10 -- maximum number of walkers allowed to exist
     this.startWalkers = numWalkers -- The starting amount of walkers
 
     -- assign an empty grid
@@ -157,6 +157,21 @@ function MapGenerator:cleanupMap()
     end
 end
 
+-- closes map borders
+function MapGenerator:closeMap()
+    local thickness = 20 -- thickness of surrounding walls
+
+    for i = 1, self.sizeX do
+        for j = 1, thickness do -- add a thick wall around the map
+            self.grid[j][i] = 0
+            self.grid[i][j] = 0
+
+            self.grid[self.sizeX - j + 1][i] = 0
+            self.grid[i][self.sizeX - j + 1] = 0
+        end
+    end
+end
+
 -- param ratio : the percentage covered with walking paths
 function MapGenerator:doDrunkardsWalk(ratio)
     -- ratio [0, 1]
@@ -175,8 +190,9 @@ function MapGenerator:doDrunkardsWalk(ratio)
         self:doDrunkardsMove((self.numFloors % #self.walkers) + 1) -- generate floors with drunkards
     end
 
+    self:closeMap() -- closes the map in thick walls
     self:clearSpawn() -- make a clearing for the spawn area
-    self:cleanupMap()
+    self:cleanupMap() -- clears standalone walls (without neighbors)
 end
 
 return MapGenerator
