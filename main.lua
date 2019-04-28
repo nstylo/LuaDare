@@ -41,7 +41,7 @@ function love.load()
         create = tmpGunBullet
     }
 
-    tmp_gun = GunCreator:new(0.3, 0, 500, 500,"assets/sound/gun_fire.wav", tmp_gun_bullet_creator)
+    tmp_gun = GunCreator:new(0.3, 0.5, 9.5, 9,"assets/sounds/gun_fire.wav", tmp_gun_bullet_creator)
 
     -- contains the bullets
     objects.bullets = {} -- contains bullets currently flying
@@ -58,6 +58,9 @@ function love.load()
     wall = love.graphics.newImage("/assets/bricks/bricks_0.png")
     dirt = love.graphics.newImage("/assets/dirt1.jpg")
 
+    musicTrack = love.audio.newSource("/assets/sounds/track.mp3", "static")
+    musicTrack:setLooping(true)
+    musicTrack:play()
 end
 
 function love.update(dt)

@@ -1,9 +1,9 @@
 --! file: player.lua
-velocity = 500
+velocity = 200
 bullet_speed = 800
 bullet_force = 500
 body_pushback = 1000
-accuracy = 0 
+accuracy = 0
 
 up = "w"
 down = "s"
@@ -100,7 +100,7 @@ function shoot(head, translate_x, translate_y, head_radius, mouse, bullet)
     -- transfer bullet accross this vector by distance of radius
     bullet:setX(head_x + to_mouse_x * bullet_distance)
     bullet:setY(head_y + to_mouse_y * bullet_distance)
-    -- apply forces 
+    -- apply forces
     bullet:applyForce(to_mouse_x * bullet_force,  to_mouse_y * bullet_force)
     -- apply innacuracy
     bullet:applyForce((1-accuracy) * math.random(200, 300),  (1-accuracy) * math.random(200, 300))

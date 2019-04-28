@@ -1,13 +1,12 @@
 -- gun class
 
--- class Gun 
+-- class Gun
 local Gun = {}
 local metatable = {__index = Gun}
 
 fireTime = 0 -- counter for last time fired
 eps = 0.02
-INACCURACY_LOWER = 200
-INACCURACY_UPPER = 300
+INACCURACY = 500
 
 -- param firerate: in seconds, how often can shoot
 -- param accuracy: how accurate [0..1] , 1 is most accurate
@@ -22,14 +21,18 @@ function Gun:new(firerate, accuracy, speed, pushback, sound_loc, bullet_creator)
     this.acc = accuracy
     this.speed = speed
     this.force = pushback
-    this.sound = love.audio.newSource(sound_loc, "static") 
-    --print(this.sound)
+    this.sound = love.audio.newSource(sound_loc, "static")
     this.bullet_creator = bullet_creator
-    
+
     return setmetatable(this, metatable)
 end
 
 function Gun:playSound()
+    self.sound:stop() -- stop sound if there's a request to play it again (good for gunshots)
+
+    pitchMod = 0.8 + love.math.random(0, 10) / 25 -- add randomized pitch for variety
+    self.sound:setPitch(pitchMod)
+
     self.sound:play()
 end
 
@@ -37,13 +40,17 @@ end
 function Gun:shouldShoot(mouse)
     -- condition whether to shoot
     -- if time has passed and mouse is down
+    local canShoot = false
+    if (fireTime > self.rate + eps) then
+        canShoot = true
+    end
     -- TODO: add capacity
-    return fireTime > self.rate and mouse.isDown(1)
+    return canShoot and mouse.isDown(1)
 end
 
 -- precondition: shouldShoot() == true, if not, it disables firerate :D
--- param head: body object of the shooter 
--- param head_radius: radius of the shooter 
+-- param head: body object of the shooter
+-- param head_radius: radius of the shooter
 -- param mouse_x, mouse_y: world space coordinates of mouse
 -- param translate_x, translate_y: the world space coordinates of camera. most likely main.lua.getTranslate()
 -- returns a new bullet
@@ -59,18 +66,19 @@ function Gun:shoot(head, head_radius, mouse_x, mouse_y)
     -- size of the vector
     local scnd_norm = math.sqrt(to_mouse_x * to_mouse_x + to_mouse_y * to_mouse_y)
     -- normalize the to_mouse vector
-    to_mouse_x = to_mouse_x / scnd_norm
-    to_mouse_y = to_mouse_y / scnd_norm
+    nrmMouseX = to_mouse_x / scnd_norm
+    nrmMouseY = to_mouse_y / scnd_norm
+
     bullet = self.bullet_creator.create()
     bullet_body = bullet.b
     -- transfer bullet accross this vector by distance of radius + eps
-    bullet_body:setX(head_x + to_mouse_x * bullet_distance) 
-    bullet_body:setY(head_y + to_mouse_y * bullet_distance) 
+    bullet_body:setX(head_x + nrmMouseX * bullet_distance)
+    bullet_body:setY(head_y + nrmMouseY * bullet_distance)
     -- apply forces
-    bullet_body:applyForce(to_mouse_x * self.force, to_mouse_y * self.force)
+    --bullet_body:applyForce(to_mouse_x * self.force, to_mouse_y * self.force)
     -- apply innacuracy
-    bullet_body:applyForce((1 - self.acc) * math.random(INACCURACY_LOWER, INACCURACY_UPPER), 
-        (1 - self.acc) * math.random(INACCURACY_LOWER, INACCURACY_UPPER))
+    bullet_body:applyForce((1 - self.acc) * math.random(-INACCURACY, INACCURACY),
+        (1 - self.acc) * math.random(-INACCURACY, INACCURACY))
     -- apply speed to the bullet
     bullet_body:setLinearVelocity(to_mouse_x * self.speed, to_mouse_y * self.speed)
     -- apply pushback to the head
@@ -83,9 +91,7 @@ end
 
 function Gun:update(dt)
     fireTime = fireTime + dt
-    if (fireTime > self.rate + eps) then
-        fireTime = 0
-    end
+
 end
 
 return Gun
