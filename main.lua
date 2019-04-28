@@ -9,17 +9,17 @@ function love.load()
 
     -- Generate map
     MapGenerator = require("MapGenerator")
-    mapgen = MapGenerator:new(200, 200, 10, 15)
+    mapgen = MapGenerator:new(200, 200, 10, 35)
     mapgen:doDrunkardsWalk(0.3)
     mapgen:exportToFile("test.txt")
       
-    objects = {} -- stores objects to draw and physics
     -- centre of map
     centre_map_x = math.floor(mapgen.sizeX * mapgen.cellsize / 2)
     centre_map_y = math.floor(mapgen.sizeY * mapgen.cellsize / 2)
 
-    -- static world objects
-    objects.static = {}
+    objects = {} 
+    -- stores objects to draw and physics
+    objects.static = {} -- static world objects
     objects.head= {} -- player
     objects.wpn = {} -- weapon
     initializePlayer(objects.head, objects.wpn, centre_map_x, centre_map_y)
@@ -30,7 +30,12 @@ function love.load()
     objects.bullet_touching = {} -- number of times a bullet touches an object [bullet.f:getUserData()] = #times_touched
     bullet_amount = 0 -- amount of bullets
 
---    love.window.setMode(mapgen.sizeX * mapgen.cellsize, mapgen.sizeY * mapgen.cellsize)
+    -- love.window.setMode(mapgen.sizeX * mapgen.cellsize, mapgen.sizeY * mapgen.cellsize)   
+    
+    -- load textures
+    rock = love.graphics.newImage('test.png')
+    rock_width = rock:getWidth()
+    rock_height = rock:getHeight()
 end
 
 function love.update(dt)
@@ -66,7 +71,7 @@ function love.update(dt)
 end
 
 function love.draw()
-    love.graphics.reset()
+    love.graphics.clear()
     -- screen bounds in world space
     local x_bound_min = objects.head.body:getX() - love.graphics.getWidth() / 2
     local y_bound_min = objects.head.body:getY() - love.graphics.getHeight() / 2
@@ -131,9 +136,10 @@ function initializeMap(world_blocks)
     end
 end
 
-function drawMapBlock(r, g, b, indice)
+function drawMapBlock(r, g, b, i, tex_x, tex_y)
     love.graphics.setColor(r, g, b)
-    love.graphics.polygon("fill", objects.static[indice].body:getWorldPoints(objects.static[indice].shape:getPoints()))
+    love.graphics.polygon("line", objects.static[i].body:getWorldPoints(objects.static[i].shape:getPoints()))
+    love.graphics.draw(rock, objects.static[i].body:getX() - mapgen.cellsize / 2, objects.static[i].body:getY() - mapgen.cellsize / 2)
 end
 
 function drawWorld(x_bound_min, x_bound_max, y_bound_min, y_bound_max)
