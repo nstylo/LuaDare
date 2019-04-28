@@ -319,22 +319,6 @@ function startShake(duration, magnitude)
     t, shakeDuration, shakeMagnitude = 0, duration or 1, magnitude or 5
 end
 
--- adds a bullet to the bullet array: objects.bullets
-function addBullet(name)
-    bullet = {}
-    objects.bulletTouching[name] = 0
-    -- dynamic bullet at whatever coordinates
-    bullet.b = love.physics.newBody(world, 10, 10, "dynamic")
-    bullet.s = love.physics.newCircleShape(objects.head.shape:getRadius() * 0.5) -- shape of the bullet
-    bullet.f = love.physics.newFixture(bullet.b,bullet.s) -- add physics
-    bullet.f:setRestitution(0.2) -- determine how bouncy this be
-    bullet.f:setUserData(name) -- unique id of the bullet
-    bullet.b:setActive(false)
-    bullet.b:setBullet(true)
-    bullet.touched = 0
-    table.insert(objects.bullets, bullet)
-end
-
 -- collision callbacks
 function beginContact(a, b, coll)
     -- update number of times a bullet touched
@@ -401,7 +385,7 @@ end
 -- shakes the screen
 function shakeScreen()
     if #objects.bullets > 0 then -- if we bullets exist
-        startShake(0.05, 1.5) -- shak    if t < shakeDuration then -- if duration not passed
+        startShake(0.01, 2) -- shak    if t < shakeDuration then -- if duration not passed
         local dx = love.math.random(-shakeMagnitude, shakeMagnitude) -- shake randomly
         local dy = love.math.random(-shakeMagnitude, shakeMagnitude)
         love.graphics.translate(dx, dy) -- move the camera

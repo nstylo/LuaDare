@@ -4,7 +4,6 @@
 
 local Player = {}
 local metatable ={__index = Player}
-velocity = 200
 
 up = "w"
 down = "s"
@@ -85,7 +84,7 @@ function Player:getLinearPlayerVelocity(currentVelX, currentVelY, kybrd)
 
     if kybrd.isDown(up) then
         changedY = true
-        velocityY = -1 * velocity
+        velocityY = -1 * self.velocity
     else
         velocityX = currentVelX
         velocityY = 0
@@ -93,7 +92,7 @@ function Player:getLinearPlayerVelocity(currentVelX, currentVelY, kybrd)
 
     if  kybrd.isDown(down) then
         velocityX = currentVelX
-        velocityY = velocity
+        velocityY = self.velocity
     elseif not changedY then
         velocityX = currentVelX
         velocityY = 0
@@ -102,7 +101,7 @@ function Player:getLinearPlayerVelocity(currentVelX, currentVelY, kybrd)
     currentVelX, currentVelY = velocityX, velocityY
 
     if  kybrd.isDown(left) then
-        velocityX = -1 * velocity
+        velocityX = -1 * self.velocity
         velocityY = currentVelY
         changedX = true
     else
@@ -111,7 +110,7 @@ function Player:getLinearPlayerVelocity(currentVelX, currentVelY, kybrd)
     end
 
     if kybrd.isDown(right) then
-        velocityX = velocity
+        velocityX = self.velocity
         velocityY = currentVelY
     elseif not changedX then
         velocityX = 0
