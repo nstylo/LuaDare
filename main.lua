@@ -64,9 +64,14 @@ function love.load()
     brick = love.graphics.newImage("/assets/brick texture.png")
     dirt = love.graphics.newImage("/assets/dirt1.jpg")
 
+    hearts = {}
+    for i = 1, 10 do
+        hearts[i] = love.graphics.newImage("/assets/heart/heart pixel art 32x32.png")
+    end
+
     musicTrack = love.audio.newSource("/assets/sounds/track.mp3", "static")
     musicTrack:setLooping(true)
-    musicTrack:play()
+    --musicTrack:play()
 end
 
 function love.update(dt)
@@ -75,7 +80,7 @@ function love.update(dt)
 
     -- put the layout origin at position (0, 0) screen space
     -- the layout will grow down and to the right from this point
-    suit.layout:reset(player.body:getX() - love.graphics:getWidth()/2, player.body:getY() - love.graphics:getHeight()/2)
+    suit.layout:reset(50, 50)
 
     -- put an input widget at the layout origin, with a cell size of 200 by 30 pixels
     suit.Input(input, suit.layout:row(200,30))
@@ -83,16 +88,13 @@ function love.update(dt)
     -- put a label that displays the text below the first cell
     -- the cell size is the same as the last one (200x30 px)
     -- the label text will be aligned to the left
-    suit.Label("Health"..player.health..input.text, {align = "left"}, suit.layout:row())
+    --suit.Label("Health: " .. player.health .. input.text, {align = "left"}, suit.layout:row())
 
     -- put an empty cell that has the same size as the last cell (200x30 px)
     suit.layout:row()
 
     -- put a button of size 200x30 px in the cell below
     -- if the button is pressed, quit the game
-    if suit.Button("Close", suit.layout:row()).hit then
-        love.event.quit()
-    end
 
     if t < shakeDuration then
         t = t + dt
@@ -168,14 +170,13 @@ function love.draw()
     local maxBoundX = math.floor(player.body:getX() + love.graphics:getWidth() / 2 + mapgen.cellsize)
     local maxBoundY = math.floor(player.body:getY() + love.graphics:getHeight() / 2  + mapgen.cellsize)
 
-    -- move according to player
+    -- translate to world space
     love.graphics.translate(getTranslate())
     -- draw the world
     drawWorld(minBoundX, minBoundY, maxBoundX, maxBoundY)
     -- draw the bullets
     drawBullets(minBoundX, minBoundY, maxBoundX, maxBoundY)
     -- shake the screen
-    suit.draw()
     --shakeScreen()
 
     local headbody = player.body
@@ -183,11 +184,22 @@ function love.draw()
     xH = xH - love.graphics.getWidth() / 2
     yH = yH - love.graphics.getHeight() / 2
     -- draw enemies
-    for i=1,NUM_ENEMIES do
+    for i = 1, NUM_ENEMIES do
         objects.enemies[i]:draw(xH, yH)
     end
 
     player:draw()
+
+    -- translate back to screen space
+    love.graphics.translate(player.body:getX() - love.graphics:getWidth()/2, player.body:getY() - love.graphics:getHeight()/2)
+
+    for i = 1, math.floor(player.health / 10) do
+        print(player.health)
+
+        love.graphics.draw(hearts[1], 32*i, 15)
+    end
+    suit.draw()
+
 end
 
 function initializePlayer(playerContainer, playerX, playerY)
