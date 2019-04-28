@@ -73,9 +73,9 @@ function love.update(dt)
     world:update(dt)
     tmpGun:update(dt)
 
-    -- put the layout origin at position (100,100)
+    -- put the layout origin at position (0, 0) screen space
     -- the layout will grow down and to the right from this point
-    suit.layout:reset(100,100)
+    suit.layout:reset(player.body:getX() - love.graphics:getWidth()/2, player.body:getY() - love.graphics:getHeight()/2)
 
     -- put an input widget at the layout origin, with a cell size of 200 by 30 pixels
     suit.Input(input, suit.layout:row(200,30))
@@ -169,13 +169,13 @@ function love.draw()
     local maxBoundY = math.floor(player.body:getY() + love.graphics:getHeight() / 2  + mapgen.cellsize)
 
     -- move according to player
-    suit.draw()
     love.graphics.translate(getTranslate())
     -- draw the world
     drawWorld(minBoundX, minBoundY, maxBoundX, maxBoundY)
     -- draw the bullets
     drawBullets(minBoundX, minBoundY, maxBoundX, maxBoundY)
     -- shake the screen
+    suit.draw()
     --shakeScreen()
 
     local headbody = player.body
