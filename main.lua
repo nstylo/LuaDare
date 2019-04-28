@@ -16,12 +16,11 @@ function love.load()
     world = love.physics.newWorld(0, 0, true)
     world:setCallbacks(beginContact, endContact, preSolve, postSolve)
     t, shakeDuration, shakeMagnitude = 0, -1, 0 -- initialization for camera shaking parameters
-    MAX_TOUCHING = 3 -- number of times the bullets can bounce before die
 
     -- Generate map
     MapGenerator = require("MapGenerator")
-    mapgen = MapGenerator:new(100, 100, 5, 64)
-    mapgen:doDrunkardsWalk(0.3)
+    mapgen = MapGenerator:new(42, 42, 5, 64)
+    mapgen:doDrunkardsWalk(0.2)
     mapgen:exportToFile("test.txt")
 
     -- centre of map
@@ -41,21 +40,20 @@ function love.load()
         create = tmpGunBullet
     }
 
-    tmpGun = GunCreator:new(0.3, 0.5, 9, 13,"assets/sounds/gun_fire.wav", tmpGun_bullet_creator)
+    colorTest = {244, 219, 0}
+    tmpGun = GunCreator:new(0.3, 0.5, 9, 13, "assets/sounds/gun_fire.wav", tmpGun_bullet_creator, colorTest, 1)
 
     -- contains the bullets
     objects.bullets = {} -- contains bullets currently flying
     objects.bulletTouching = {} -- number of times a bullet touches an object [bullet.f:getUserData()] = #times_touched
     bulletCount = 0 -- amount of bullets
 
-    -- love.window.setMode(mapgen.sizeX * mapgen.cellsize, mapgen.sizeY * mapgen.cellsize)
-
     -- create enemies
     enemy_counter = 0
     Enemy = require("enemy")
     objects.enemies = {}
-    for i = 1, 3 do
 
+    for i = 1, 3 do
         -- declare spawnpoints
         local spawnX
         local spawnY
@@ -148,7 +146,7 @@ end
 
 -- gets camera translation to map from screen space to world space
 function getTranslate()
-    return -objects.head.body:getX() + love.graphics.getWidth()/2, -objects.head.body:getY() + love.graphics.getHeight()/2
+    return -objects.head.body:getX() + love.graphics.getWidth() / 2, -objects.head.body:getY() + love.graphics.getHeight() / 2
 end
 
 function love.draw()
@@ -180,7 +178,7 @@ function love.draw()
 	    objects.enemies[i]:draw(xH, yH)
     end
 
-    love.graphics.setColor(1,1,1)
+    love.graphics.setColor(0,1,1)
     -- draw the player
     love.graphics.circle("line", objects.head.body:getX() , objects.head.body:getY(), objects.head.shape:getRadius())
 end
@@ -313,9 +311,7 @@ end
 -- shakes the screen
 function shakeScreen()
     if t < shakeDuration and #objects.bullets > 1 then -- if we bullets exist
-        startShake(0.5, 100) -- shake
-    end
-    if t < shakeDuration then -- if duration not passed
+        startShake(0.5, 100) -- shak    if t < shakeDuration then -- if duration not passed
         local dx = love.math.random(-shakeMagnitude, shakeMagnitude) -- shake randomly
         local dy = love.math.random(-shakeMagnitude, shakeMagnitude)
         love.graphics.translate(dx, dy) -- move the camera
@@ -323,11 +319,11 @@ function shakeScreen()
 end
 
 function drawBullets(minBoundX, minBoundY, maxBoundX, maxBoundY)
-    for i=#objects.bullets,1,-1 do
+    for i = #objects.bullets, 1, -1 do
         -- get location of the bullet
         local bulletX, bulletY = objects.bullets[i].b:getPosition()
         -- if out of bounds for screen
-        if tonumber(objects.bulletTouching[objects.bullets[i].f:getUserData()]) > MAX_TOUCHING then -- if the number of touchings more than 5
+        if tonumber(objects.bulletTouching[objects.bullets[i].f:getUserData()]) > tmpGun.maxCollisions then -- if the number of touchings more than 5
             -- destroy the bullet
             objects.bullets[i].b:destroy()
             -- remove it from the array
@@ -335,6 +331,7 @@ function drawBullets(minBoundX, minBoundY, maxBoundX, maxBoundY)
             --table.remove(objects.bulletTouching, objects.bullets[i].f:getUserData())
         else
             -- draw the bullet
+            love.graphics.setColor(unpack(tmpGun.bulletColor))
             love.graphics.circle("fill", objects.bullets[i].b:getX(), objects.bullets[i].b:getY(), objects.bullets[i].s:getRadius())
         end
     end
