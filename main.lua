@@ -2,7 +2,7 @@ require("player")
 
 function love.load()
     love.physics.setMeter(64)
-    world = love.physics.newWorld(0, 0, true) 
+    world = love.physics.newWorld(0, 0, true)
     world:setCallbacks(beginContact, endContact, preSolve, postSolve)
     t, shakeDuration, shakeMagnitude = 0, -1, 0 -- initialization for camera shaking parameters
     MAX_TOUCHING = 5 -- number of times the bullets can bounce before die
@@ -12,28 +12,28 @@ function love.load()
     mapgen = MapGenerator:new(200, 200, 10, 35)
     mapgen:doDrunkardsWalk(0.3)
     mapgen:exportToFile("test.txt")
-      
+
     -- centre of map
     centre_map_x = math.floor(mapgen.sizeX * mapgen.cellsize / 2)
     centre_map_y = math.floor(mapgen.sizeY * mapgen.cellsize / 2)
 
-    objects = {} 
+    objects = {}
     -- stores objects to draw and physics
     objects.static = {} -- static world objects
     objects.head= {} -- player
     objects.wpn = {} -- weapon
     initializePlayer(objects.head, objects.wpn, centre_map_x, centre_map_y)
     initializeMap(objects.static)
-   
+
     -- contains the bullets
     objects.bullets = {} -- contains bullets currently flying
     objects.bullet_touching = {} -- number of times a bullet touches an object [bullet.f:getUserData()] = #times_touched
     bullet_amount = 0 -- amount of bullets
 
-    -- love.window.setMode(mapgen.sizeX * mapgen.cellsize, mapgen.sizeY * mapgen.cellsize)   
-    
+    -- love.window.setMode(mapgen.sizeX * mapgen.cellsize, mapgen.sizeY * mapgen.cellsize)
+
     -- load textures
-    rock = love.graphics.newImage('test.png')
+    rock = love.graphics.newImage("/assets/bricks/bricks_2.png")
     rock_width = rock:getWidth()
     rock_height = rock:getHeight()
 end
@@ -55,12 +55,12 @@ function love.update(dt)
     x_cur, y_cur = headbody:getLinearVelocity()
     mouse_x, mouse_y = mouse.getPosition()
     wpn_x, wpn_y = weaponbody:getPosition()
-    -- update player angle and velocity 
+    -- update player angle and velocity
     --
     head_x, head_y = headbody:getPosition()
     -- update player angle and velocity
     headbody:setLinearVelocity(getPlayerVelocity(x_cur, y_cur, kybrd))
-    headbody:setAngle(getPlayerAngle(mouse, weaponbody)) 
+    headbody:setAngle(getPlayerAngle(mouse, weaponbody))
     -- shoot if necessary
     if shouldShoot(mouse) then
         bullet_amount = bullet_amount + 1
@@ -73,12 +73,12 @@ end
 function love.draw()
     love.graphics.clear()
     -- screen bounds in world space
-    local x_bound_min = objects.head.body:getX() - love.graphics:getWidth() / 2 - mapgen.cellsize
-    local y_bound_min = objects.head.body:getY() - love.graphics:getHeight() / 2 - mapgen.cellsize
-    local x_bound_max = objects.head.body:getX() + love.graphics:getWidth() / 2 + mapgen.cellsize
-    local y_bound_max = objects.head.body:getY() + love.graphics:getHeight() / 2  + mapgen.cellsize
+    local x_bound_min = math.floor(objects.head.body:getX() - love.graphics:getWidth() / 2 - mapgen.cellsize)
+    local y_bound_min = math.floor(objects.head.body:getY() - love.graphics:getHeight() / 2 - mapgen.cellsize)
+    local x_bound_max = math.floor(objects.head.body:getX() + love.graphics:getWidth() / 2 + mapgen.cellsize)
+    local y_bound_max = math.floor(objects.head.body:getY() + love.graphics:getHeight() / 2  + mapgen.cellsize)
     -- move according to player
-    love.graphics.translate(math.floor(-objects.head.body:getX() + love.graphics.getWidth()/2), math.floor(-objects.head.body:getY() + love.graphics.getHeight()/2))
+    love.graphics.translate(math.floor(-objects.head.body:getX() + love.graphics.getWidth() / 2), math.floor(-objects.head.body:getY() + love.graphics.getHeight() / 2))
     -- draw the player
     love.graphics.circle("line", objects.head.body:getX() , objects.head.body:getY(), objects.head.shape:getRadius())
         -- draw the weapon object
@@ -131,7 +131,6 @@ function initializeMap(world_blocks)
                 world_blocks[key].fixture = love.physics.newFixture(world_blocks[key].body, world_blocks[key].shape)
                 world_blocks[key].fixture:setUserData("block")
             end
-            
         end
     end
 end
@@ -139,7 +138,7 @@ end
 function drawMapBlock(r, g, b, i, tex_x, tex_y)
     love.graphics.setColor(r, g, b)
     love.graphics.polygon("line", objects.static[i].body:getWorldPoints(objects.static[i].shape:getPoints()))
-    love.graphics.draw(rock, objects.static[i].body:getX() - mapgen.cellsize / 2, objects.static[i].body:getY() - mapgen.cellsize / 2)
+    love.graphics.draw(rock, math.floor(objects.static[i].body:getX() - mapgen.cellsize / 2), math.floor(objects.static[i].body:getY() - mapgen.cellsize / 2))
 end
 
 function drawWorld(x_bound_min, y_bound_min, x_bound_max, y_bound_max)
@@ -176,24 +175,24 @@ end
 -- collision callbacks
 function beginContact(a, b, coll)
     -- update number of times a bullet touched
-    if tonumber(b:getUserData()) ~= nil then 
+    if tonumber(b:getUserData()) ~= nil then
         objects.bullet_touching[b:getUserData()] = objects.bullet_touching[b:getUserData()] + 1
     elseif tonumber(a:getUserData()) ~= nil then
         objects.bullet_touching[a:getUserData()] = objects.bullet_touching[a:getUserData()] + 1
     end
-     
+
 end
- 
+
 function endContact(a, b, coll)
- 
+
 end
- 
+
 function preSolve(a, b, coll)
- 
+
 end
- 
+
 function postSolve(a, b, coll, normalimpulse, tangentimpulse)
- 
+
 end
 --end of collision callbacks
 
