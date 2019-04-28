@@ -22,7 +22,7 @@ function love.load()
     love.physics.setMeter(64)
     world = love.physics.newWorld(0, 0, true)
     world:setCallbacks(beginContact, endContact, preSolve, postSolve)
-    t, shakeDuration, shakeMagnitude = 0, -1, 0 -- initialization for camera shaking parameters
+    t, shakeDuration, shakeMagnitude = 0, 1, 0 -- initialization for camera shaking parameters
 
     -- Generate map
     MapGenerator = require("MapGenerator")
@@ -116,8 +116,8 @@ function love.update(dt)
 
         local bullet = curGun:shoot(player.body,
         player.shape:getRadius(),
-        mouse:getX() + math.abs(translateX),
-        mouse:getY() + math.abs(translateY))
+        mouse:getX(), --+ math.abs(translateX)
+        mouse:getY()) --+ math.abs(translateY)
 
         bullet.f:setUserData(tostring(bulletCount))
         objects.bulletTouching[tostring(bulletCount)] = 0
@@ -168,6 +168,7 @@ end
 function love.draw()
     love.graphics.clear()
     love.graphics.reset()
+    shakeScreen()
 
     -- screen bounds in world space
     local minBoundX = math.floor(player.body:getX() - love.graphics:getWidth() / 2 - mapgen.cellsize)
@@ -182,7 +183,6 @@ function love.draw()
     -- draw the bullets
     drawBullets(minBoundX, minBoundY, maxBoundX, maxBoundY)
     -- shake the screen
-    --shakeScreen()
 
     local headbody = player.body
     xH, yH = headbody:getPosition()
@@ -204,7 +204,7 @@ function love.draw()
     end
     printFPS() -- print fps counter
 
-    suit.draw() -- prit gui
+    suit.draw() -- print gui
 
     -- player died event
     if player:isDead() then
@@ -316,37 +316,37 @@ end
 function beginContact(a, b, coll)
     -- update number of times a bullet touched
     if tonumber(b:getUserData()) ~= nil then
-	bulletCollision(a, b)
+        bulletCollision(a, b)
     elseif tonumber(a:getUserData()) ~= nil then
-	bulletCollision(b, a)
+        bulletCollision(b, a)
     end
 
     if isEnemy(a) then
         if isPlayer(b) then
-	    player:takeDamage(objects.enemies[getIndex(a)].strength)
-	end
+            player:takeDamage(objects.enemies[getIndex(a)].strength)
+        end
     elseif isEnemy(b) then
-	if isPlayer(a) then
-	    player:takeDamage(objects.enemies[getIndex(b)].strength)
+        if isPlayer(a) then
+            player:takeDamage(objects.enemies[getIndex(b)].strength)
         end
     end
 end
 
 function bulletCollision(a, b)
     -- update number of times a bullet touched
-        if string.sub(a:getUserData(), 1, 5) == "enemy" then
-            -- delete the enemy
-            local idx = tonumber(string.sub(a:getUserData(), 6))
-            objects.bulletTouching[b:getUserData()] = player:getGun().maxCollisions + 1
-	    if objects.enemies[idx].hp < 0 then
-            	objects.enemies[idx]:destroy()
-	    else
-		objects.enemies[idx]:takeDamage(20)
-	    end
+    if string.sub(a:getUserData(), 1, 5) == "enemy" then
+        -- delete the enemy
+        local idx = tonumber(string.sub(a:getUserData(), 6))
+        objects.bulletTouching[b:getUserData()] = player:getGun().maxCollisions + 1
+        if objects.enemies[idx].hp < 0 then
+            objects.enemies[idx]:destroy()
         else
-            -- bounce off wall
-            objects.bulletTouching[b:getUserData()] = objects.bulletTouching[b:getUserData()] + 1
+            objects.enemies[idx]:takeDamage(20)
         end
+    else
+        -- bounce off wall
+        objects.bulletTouching[b:getUserData()] = objects.bulletTouching[b:getUserData()] + 1
+    end
 end
 
 function isEnemy(fixture)
@@ -377,8 +377,8 @@ end
 
 -- shakes the screen
 function shakeScreen()
-    if t < shakeDuration and #objects.bullets > 1 then -- if we bullets exist
-        startShake(0.5, 100) -- shak    if t < shakeDuration then -- if duration not passed
+    if #objects.bullets > 0 then -- if we bullets exist
+        startShake(0.05, 1.5) -- shak    if t < shakeDuration then -- if duration not passed
         local dx = love.math.random(-shakeMagnitude, shakeMagnitude) -- shake randomly
         local dy = love.math.random(-shakeMagnitude, shakeMagnitude)
         love.graphics.translate(dx, dy) -- move the camera
@@ -435,4 +435,3 @@ function createEnemies()
         enemy_counter = enemy_counter + 1
     end
 end
-
