@@ -35,6 +35,14 @@ function love.load()
     -- create enemies
     Enemy = require("enemy")
     objects.enemies = {}
+    for i=1,10 do
+	    print("enemy"..i)
+	    local myX = math.random(centre_map_x - 500, centre_map_x + 500)
+	    local myY = math.random(centre_map_y - 500, centre_map_y + 500)
+	    print(myX.." "..myY)
+	    --objects.enemies[i] = Enemy:new(1, 2, 3, 4)
+	    objects.enemies[i] = Enemy:new(myX, myY, 32, 500, world)
+    end
 
     -- load textures
     rock = love.graphics.newImage("/assets/bricks/bricks_2.png")
@@ -71,10 +79,16 @@ function love.update(dt)
         shoot(weaponbody, headbody, mouse, objects.bullets[table.getn(objects.bullets)].b)
     end
     headbody:setAngularVelocity(0)
+
+    for i=1,10 do
+	    objects.enemies[i]:update(head_x, head_y)
+    end
+
 end
 
 function love.draw()
     love.graphics.clear()
+    love.graphics.reset()
 
     -- screen bounds in world space
     local x_bound_min = math.floor(objects.head.body:getX() - love.graphics:getWidth() / 2 - mapgen.cellsize)
@@ -93,6 +107,15 @@ function love.draw()
     drawBullets(x_bound_min, y_bound_min, x_bound_max, y_bound_max)
     -- shake the screen
     --shakeScreen()
+
+
+    --love.graphics.translate(math.floor(objects.head.body:getX() - love.graphics.getWidth() / 2), math.floor(objects.head.body:getY() - love.graphics.getHeight() / 2))
+    local headbody = objects.head.body
+    xH, yH = headbody:getPosition()
+    -- draw enemies
+    for i=1,10 do
+	    objects.enemies[i]:draw(xH, yH)
+    end
 end
 
 function initializePlayer(player_container, weapon_container, player_x, player_y)
