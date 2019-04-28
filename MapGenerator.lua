@@ -22,7 +22,7 @@ function MapGenerator:new(sizeX, sizeY, numWalkers, cellsize)
     this.maxWalkers = 10 -- maximum number of walkers allowed to exist
     this.startWalkers = numWalkers -- The starting amount of walkers
 
-    this.thickness = 20 -- thickness of surrounding walls
+    this.thickness = 5 -- thickness of surrounding walls
 
     -- assign an empty grid
     local grid = {}
@@ -85,18 +85,18 @@ function MapGenerator:doDrunkardsMove(w)
 
     walker = self.walkers[w] -- walker we're working with
 
-    if walker.y ~= 1 and rand == 1 then -- north
+    if walker.y ~= self.thickness and rand == 1 then -- north
         walker.y = walker.y - 1
-    elseif walker.y ~= self.sizeY and rand == 2 then -- south
+    elseif walker.y ~= self.sizeY - self.thickness and rand == 2 then -- south
         walker.y = walker.y + 1
-    elseif walker.x ~= self.sizeX and rand == 3 then -- east
+    elseif walker.x ~= self.sizeX - self.thickness and rand == 3 then -- east
         walker.x = walker.x + 1
-    elseif walker.x ~= 1 and rand == 4 then -- west
+    elseif walker.x ~= self.thickness and rand == 4 then -- west
         walker.x = walker.x - 1
     end
 
     -- check if current grid index is a 0, if so, then change to 1 and increment counter
-    if self.grid[walker.x][walker.y] == 0 then
+    if self.grid[walker.x][walker.y] == 0 and self.grid[walker.x][walker.y] ~= -1 then
         self.grid[walker.x][walker.y] = 1
         self.numFloors = self.numFloors + 1 -- increment number of non 0s
     end
@@ -132,11 +132,11 @@ function MapGenerator:addWalker()
 end
 
 -- clear an area of the spawn
--- param area: areaxarea that gets removed at spawn
+-- param area: (area+1) x (area+1) that gets removed at spawn
 function MapGenerator:clearSpawn(area)
     -- get the middle of the grid
-    local middleX = math.floor(self.sizeX / 2)
-    local middleY = math.floor(self.sizeY / 2)
+    local middleX = math.ceil(self.sizeX / 2)
+    local middleY = math.ceil(self.sizeY / 2)
 
     -- clear an area at spawn
     for i = (middleX - area), (middleX + area) do
@@ -165,11 +165,11 @@ function MapGenerator:closeMap()
 
     for i = 1, self.sizeX do
         for j = 1, self.thickness do -- add a thick wall around the map
-            self.grid[j][i] = 0
-            self.grid[i][j] = 0
+            self.grid[j][i] = -1
+            self.grid[i][j] = -1
 
-            self.grid[self.sizeX - j + 1][i] = 0
-            self.grid[i][self.sizeX - j + 1] = 0
+            self.grid[self.sizeX - j + 1][i] = -1
+            self.grid[i][self.sizeX - j + 1] = -1
         end
     end
 end
@@ -185,7 +185,7 @@ function MapGenerator:doDrunkardsWalk(ratio)
 
     -- walk with a walker until we find a tile to set to 1
     -- until the desired percentage is reached
-    while (self.numFloors / (self.sizeX * self.sizeY)) < ratio do
+    while (self.numFloors / ((self.sizeX * self.sizeY))) < ratio do
         -- randomly add and remove walkers based on chance
         self:delWalker()
         self:addWalker()
@@ -193,7 +193,7 @@ function MapGenerator:doDrunkardsWalk(ratio)
     end
 
     self:closeMap() -- closes the map in thick walls
-    self:clearSpawn(2) -- make a clearing for the spawn area
+    self:clearSpawn(1) -- make a clearing for the spawn area
     self:cleanupMap() -- clears standalone walls (without neighbors)
 end
 

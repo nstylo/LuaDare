@@ -9,13 +9,13 @@ function love.load()
 
     -- Generate map
     MapGenerator = require("MapGenerator")
-    mapgen = MapGenerator:new(100, 100, 5, 32)
-    mapgen:doDrunkardsWalk(0.5)
+    mapgen = MapGenerator:new(150, 150, 5, 32)
+    mapgen:doDrunkardsWalk(0.3)
     mapgen:exportToFile("test.txt")
 
     -- centre of map
-    centre_map_x = math.floor(mapgen.sizeX * mapgen.cellsize / 2)
-    centre_map_y = math.floor(mapgen.sizeY * mapgen.cellsize / 2)
+    centre_map_x = mapgen.sizeX * mapgen.cellsize / 2
+    centre_map_y = mapgen.sizeY * mapgen.cellsize / 2
 
     objects = {}
     -- stores objects to draw and physics
@@ -56,7 +56,7 @@ function love.update(dt)
     x_cur, y_cur = headbody:getLinearVelocity()
     -- update player angle and velocity
     headbody:setLinearVelocity(getPlayerVelocity(x_cur, y_cur, kybrd))
-    headbody:setAngle(getPlayerAngle(mouse, headbody)) 
+    headbody:setAngle(getPlayerAngle(mouse, headbody))
     -- update player angle and velocity
     headbody:setLinearVelocity(getPlayerVelocity(x_cur, y_cur, kybrd))
     -- shoot if necessary
@@ -65,8 +65,8 @@ function love.update(dt)
         addBullet(tostring(bullet_amount)) -- give it as a unique id
         -- TODO:  graphics.translate within the shoot method without passing translate_x and y
         local translate_x, translate_y = getTranslate() -- translation coordinates
-        shoot(headbody, translate_x, translate_y, 
-            objects.head.shape:getRadius(), 
+        shoot(headbody, translate_x, translate_y,
+            objects.head.shape:getRadius(),
             mouse, objects.bullets[table.getn(objects.bullets)].b)
     end
 
@@ -162,7 +162,7 @@ end
 function drawMapBlock(i)
     -- choose texture per block
     local texture = nil
-    if objects.static[i].fixture:getUserData() == "wall" then
+    if objects.static[i].fixture:getUserData() == "indestructible" then
         texture = wall
     else
         texture  = dirt
