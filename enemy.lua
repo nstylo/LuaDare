@@ -2,11 +2,11 @@
 local Enemy = {}
 local metatable = { __index = Enemy }
 
-
-function Enemy:new(startX, startY, size, speed, world)
+function Enemy:new(index, startX, startY, size, speed, world)
 	local this = {}
 	--math.randomseed(os.time())
 
+	this.index = index
 	-- coordinates in world space
 	this.x = startX
 	this.y = startY
@@ -26,7 +26,7 @@ function Enemy:new(startX, startY, size, speed, world)
 	this.shape = love.physics.newCircleShape(size)
 	this.fixture = love.physics.newFixture(this.body, this.shape)
 	this.fixture:setRestitution(0)
-	this.fixture:setUserData("enemy")
+	this.fixture:setUserData("enemy" .. this.index)
 
 	return setmetatable(this, metatable)
 
@@ -78,6 +78,14 @@ function Enemy:update(player_x, player_y)
 
     -- set velocity
 	self.body:setLinearVelocity(xVelo, yVelo)
+end
+
+function Enemy:getIndex()
+	return self.index
+end
+
+function Enemy:destroy()
+	self.body:destroy()
 end
 
 return Enemy
