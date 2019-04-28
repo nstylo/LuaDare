@@ -4,8 +4,8 @@ local metatable = { __index = Enemy }
 
 function Enemy:new(index, startX, startY, size, speed, world)
     local this = {}
-    --math.randomseed(os.time())
 
+    -- unique ID
     this.index = index
     -- coordinates in world space
     this.x = startX
@@ -15,9 +15,11 @@ function Enemy:new(index, startX, startY, size, speed, world)
     this.xOff = startX
     this.yOff = startY
 
+    -- stats
     this.hp = 1
     this.size = size
     this.speed = speed
+    this.alive = true
 
     -- setup physics shit
     this.body = love.physics.newBody(world, startX, startY, "dynamic")
@@ -29,15 +31,19 @@ function Enemy:new(index, startX, startY, size, speed, world)
     this.fixture:setUserData("enemy" .. this.index)
 
     return setmetatable(this, metatable)
-
 end
 
 function Enemy:draw()
-    love.graphics.setColor(1,0,0)
-    love.graphics.circle("fill", self.body:getX(), self.body:getY(), self.shape:getRadius())
+    if self.alive then
+        love.graphics.setColor(1,0,0)
+        love.graphics.circle("fill", self.body:getX(), self.body:getY(), self.shape:getRadius())
+    end
 end
 
 function Enemy:update(player_x, player_y)
+    if not self.alive then
+    	return
+    end
     -- declare distances to player
     local xDist
     local yDist
@@ -85,7 +91,10 @@ function Enemy:getIndex()
 end
 
 function Enemy:destroy()
-    self.body:destroy()
+    if self.alive then
+        self.body:destroy()
+	self.alive = false
+    end
 end
 
 return Enemy
