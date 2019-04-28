@@ -293,9 +293,9 @@ function bulletCollision(a, b)
         if string.sub(a:getUserData(), 1, 5) == "enemy" then
             -- delete the enemy
             local idx = tonumber(string.sub(a:getUserData(), 6))
+            objects.bulletTouching[b:getUserData()] = player:getGun().maxCollisions + 1
 	    if objects.enemies[idx].hp < 0 then
             	objects.enemies[idx]:destroy()
-            	objects.bulletTouching[b:getUserData()] = player:getGun().maxCollisions + 1
 	    else
 		objects.enemies[idx].hp = objects.enemies[idx].hp - 20
 	    end
