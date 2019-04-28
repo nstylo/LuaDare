@@ -1,23 +1,77 @@
---! file: player.lua
-velocity = 400
+-- player class
+
+-- class Player
+
+local Player = {}
+local metatable ={__index = Player}
+velocity = 200
 
 up = "w"
 down = "s"
 left = "a"
 right = "d"
 
-function setControls(_up, _down, _left, _right)
+-- param velocity: speed of the player
+-- param startingGun: starting gun 
+-- param health: starting health
+-- param world: the love2d world of the player
+-- param startX,startY: world space starting coordinates
+function Player:new(velocity, startingGun, startX, startY, health, world)
+    local this = {}
+
+    this.velocity = velocity
+    this.gun = startingGun
+    this.health = health
+
+    -- set physics parameter
+    this.body = love.physics.newBody(world, startX, startX, "dynamic")
+    this.body:setMass(1)
+    this.body:setAngularVelocity(0)
+    this.shape = love.physics.newCircleShape(10)
+    this.fixture = love.physics.newFixture(this.body, this.shape)
+    this.fixture:setUserData("player")
+    this.fixture:setRestitution(0)
+
+    return setmetatable(this, metatable)
+end
+
+-- gives the gun to a player
+-- param newGun: gun to give to the player
+function Player:giveGun(newGun)
+    -- TODO: support multiple guns
+    self.gun = newGun
+end
+
+-- getter for the gun
+function Player:getGun()
+    -- TODO: support multiple guns
+    return self.gun
+end
+
+-- decrease health of player
+function Player:takeDamage(dmg)
+    self.health = self.health - dmg
+end
+
+-- change the controls of the players, must be keyboard
+function Player:setControls(_up, _down, _left, _right)
     up = _up
     down = _down
     left = _left
     right = _right
 end
 
-function setPlayerVelocity(vel)
-    velocity = vel
+-- change the velocity of the player
+function Player:setPlayerVelocity(vel)
+    self.velocity = vel
 end
 
-function getPlayerVelocity(currentVelX, currentVelY, kybrd)
+-- calculates the velocity according to the previous velocity
+-- and the keyboard presses
+-- param currentVelX: current linear velocity on x axis
+-- similarly for currentVelY
+-- param kybrd: love2d keyboard object
+function Player:getLinearPlayerVelocity(currentVelX, currentVelY, kybrd)
     changedY = false
     changedX = false
     velocityX = currentVelX
@@ -60,3 +114,17 @@ function getPlayerVelocity(currentVelX, currentVelY, kybrd)
 
     return velocityX, velocityY
 end
+
+function Player:draw()
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.circle("line", self.body:getX() , self.body:getY(), self.shape:getRadius())
+end
+
+function Player:update(dt, kybrd)
+    local currentVelX, currentVelY = self.body:getLinearVelocity()
+    -- update velocity
+    self.body:setLinearVelocity(self:getLinearPlayerVelocity(currentVelX, currentVelY, kybrd))
+    self.body:setAngularVelocity(0)
+end
+
+return Player

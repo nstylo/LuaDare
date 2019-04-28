@@ -14,7 +14,7 @@ INACCURACY = 500
 -- param pushback: force applied to the player
 -- param soundLoc: relative path to sound file to play
 -- param bulletCreator: creates the bullet for this gun, with method .create()
-function Gun:new(firerate, accuracy, speed, pushback, soundLoc, bulletCreator)
+function Gun:new(firerate, accuracy, speed, pushback, soundLoc, bulletCreator, bulletColor, maxCollisions)
     local this = {}
 
     this.rate = firerate
@@ -22,6 +22,8 @@ function Gun:new(firerate, accuracy, speed, pushback, soundLoc, bulletCreator)
     this.speed = speed
     this.force = pushback
     this.sound = love.audio.newSource(soundLoc, "static")
+    this.bulletColor = bulletColor
+    this.maxCollisions = maxCollisions
     this.bulletCreator = bulletCreator
 
     return setmetatable(this, metatable)
