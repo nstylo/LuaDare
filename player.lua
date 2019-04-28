@@ -34,7 +34,7 @@ function getPlayerVelocity(cur_vel_x, cur_vel_y, kybrd)
         y_velocity = -1 * velocity
     else
         x_velocity = cur_vel_x
-        y_velocity = 1 
+        y_velocity = 0 
     end
 
     if  kybrd.isDown(down) then
@@ -42,7 +42,7 @@ function getPlayerVelocity(cur_vel_x, cur_vel_y, kybrd)
         y_velocity = velocity
     elseif not y_changed then
         x_velocity = cur_vel_x
-        y_velocity = 1
+        y_velocity = 0
     end
 
     cur_vel_x, cur_vel_y = x_velocity, y_velocity
@@ -52,7 +52,7 @@ function getPlayerVelocity(cur_vel_x, cur_vel_y, kybrd)
         y_velocity = cur_vel_y
         x_changed = true
     else
-        x_velocity = 1
+        x_velocity = 0
         y_velocity = cur_vel_y
     end
 
@@ -60,7 +60,7 @@ function getPlayerVelocity(cur_vel_x, cur_vel_y, kybrd)
         x_velocity = velocity
         y_velocity = cur_vel_y
     elseif not x_changed then
-        x_velocity = 1
+        x_velocity = 0
         y_velocity = cur_vel_y
     end
 
@@ -89,9 +89,9 @@ function shoot(wpn, head, mouse, bullet)
     bullet:setY(wpn_y)
     bullet:setActive(true) -- render it
     -- move bullet
-    bullet:setLinearVelocity((wpn_x - head_x + math.random(5, 100)) * bullet_speed,  (wpn_y - head_y + math.random(5,100)) * bullet_speed)
+  --  bullet:setLinearVelocity((wpn_x - head_x + math.random(5, 100)) * bullet_speed,  (wpn_y - head_y + math.random(5,100)) * bullet_speed)
     -- push bulet
-    bullet:applyForce((mouse_x - wpn_x) * bullet_force, (mouse_y - wpn_y) * bullet_force)
+ --   bullet:applyForce((mouse_x - wpn_x) * bullet_force, (mouse_y - wpn_y) * bullet_force)
     -- knockback
-    head:applyForce((head_x - wpn_x) * body_pushback , (head_y - wpn_y) * body_pushback)
+--    head:applyForce((head_x - wpn_x) * body_pushback , (head_y - wpn_y) * body_pushback)
 end

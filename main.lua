@@ -2,7 +2,8 @@ require("player")
 
 function love.load()
     love.physics.setMeter(64)
-    world = love.physics.newWorld(0, 0, true) world:setCallbacks(beginContact, endContact, preSolve, postSolve)
+    world = love.physics.newWorld(0, 0, true) 
+    world:setCallbacks(beginContact, endContact, preSolve, postSolve)
     t, shakeDuration, shakeMagnitude = 0, -1, 0 -- initialization for camera shaking parameters
     MAX_TOUCHING = 5 -- number of times the bullets can bounce before die
 
@@ -71,18 +72,18 @@ function love.draw()
     local y_bound_min = objects.head.body:getY() - love.graphics:getHeight() / 2 - mapgen.cellsize
     local x_bound_max = objects.head.body:getX() + love.graphics:getWidth() / 2 + mapgen.cellsize
     local y_bound_max = objects.head.body:getY() + love.graphics:getHeight() / 2  + mapgen.cellsize
-    -- shake the screen
-    shakeScreen()
     -- move according to player
-    love.graphics.translate(-objects.head.body:getX() + love.graphics.getWidth()/2, -objects.head.body:getY() + love.graphics.getHeight()/2)
+    love.graphics.translate(math.floor(-objects.head.body:getX() + love.graphics.getWidth()/2), math.floor(-objects.head.body:getY() + love.graphics.getHeight()/2))
     -- draw the player
     love.graphics.circle("line", objects.head.body:getX() , objects.head.body:getY(), objects.head.shape:getRadius())
-    -- draw the weapon object
+        -- draw the weapon object
     love.graphics.polygon("line", objects.wpn.body:getWorldPoints(objects.wpn.shape:getPoints()))
     -- draw the world
     drawWorld(x_bound_min, y_bound_min, x_bound_max, y_bound_max)
     -- draw the bullets
     drawBullets(x_bound_min, y_bound_min, x_bound_max, y_bound_max)
+    -- shake the screen
+    --shakeScreen()
 end
 
 function initializePlayer(player_container, weapon_container, player_x, player_y)
@@ -90,13 +91,13 @@ function initializePlayer(player_container, weapon_container, player_x, player_y
     weapon_height = 5
     -- player
     player_container.body = love.physics.newBody(world, player_x, player_y, "dynamic")
-    player_container.body:setMass(0)
+    player_container.body:setMass(1)
     player_container.body:setAngularVelocity(0)
     player_container.shape = love.physics.newCircleShape(10)
     player_container.fixture = love.physics.newFixture(player_container.body, player_container.shape)
     player_container.fixture:setRestitution(0)
     player_container.fixture:setUserData("head")
-    player_container.body:setInertia(50)
+    --player_container.body:setInertia(50)
     -- starting weapon
     weapon_container.body = love.physics.newBody(world, player_x, player_y + 2*weapon_height, "dynamic")
     weapon_container.shape = love.physics.newRectangleShape(weapon_width, weapon_height)
@@ -194,7 +195,7 @@ end
 -- shakes the screen
 function shakeScreen()
     if t < shakeDuration and #objects.bullets > 1 then -- if we bullets exist
-        startShake(0.5, 3) -- shake
+        startShake(0.5, 100) -- shake
     end
     if t < shakeDuration then -- if duration not passed
         local dx = love.math.random(-shakeMagnitude, shakeMagnitude) -- shake randomly
@@ -214,7 +215,7 @@ function drawBullets(x_bound_min, y_bound_min, x_bound_max, y_bound_max)
             -- remove it from the array
             table.remove(objects.bullets, i)
             --table.remove(objects.bullet_touching, objects.bullets[i].f:getUserData())
-        elseif objects.bullets[i].b:isActive() then
+        else
             -- draw the bullet
             love.graphics.circle("fill", objects.bullets[i].b:getX(), objects.bullets[i].b:getY(), objects.bullets[i].s:getRadius())
         end
