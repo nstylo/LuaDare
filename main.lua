@@ -13,15 +13,18 @@ local suit = require 'suit'
 
 function love.load()
     input = {text = ""}
+    fps = love.timer.getFPS()
     -- player constants
     local PLAYER_VELOCITY = 200
     local HEALTH = 100
     NUM_ENEMIES = 10
 
+    roundOver = false
+
     love.physics.setMeter(64)
     world = love.physics.newWorld(0, 0, true)
     world:setCallbacks(beginContact, endContact, preSolve, postSolve)
-    t, shakeDuration, shakeMagnitude = 0, -1, 0 -- initialization for camera shaking parameters
+    t, shakeDuration, shakeMagnitude = 0, 1, 0 -- initialization for camera shaking parameters
 
     -- Generate map
     MapGenerator = require("MapGenerator")
@@ -64,35 +67,59 @@ function love.load()
     brick = love.graphics.newImage("/assets/brick texture.png")
     dirt = love.graphics.newImage("/assets/dirt1.jpg")
 
+    hearts = {}
+    for i = 1, math.floor(player.health / 10) do
+        hearts[i] = love.graphics.newImage("/assets/heart/heart pixel art 32x32.png")
+    end
+
     musicTrack = love.audio.newSource("/assets/sounds/track.mp3", "static")
     musicTrack:setLooping(true)
     musicTrack:play()
 end
 
+function roundIsOver()
+    count = 0 -- number of alive enemies
+
+    for i = 0, #objects.enemies do
+        if objects.enemies[i] ~= nil and objects.enemies[i].alive then -- count alive enemies
+            count = count + 1
+        end
+    end
+
+    if count == 0 then
+        roundOver = true
+    end
+
+    --TODO: Spawn a portal or something to advance to the next round
+end
+
 function love.update(dt)
+    if player:isDead() then
+        dt = dt / 16
+    end
+
+    roundIsOver()
+
     world:update(dt)
     tmpGun:update(dt)
 
     -- put the layout origin at position (0, 0) screen space
     -- the layout will grow down and to the right from this point
-    suit.layout:reset(player.body:getX() - love.graphics:getWidth()/2, player.body:getY() - love.graphics:getHeight()/2)
+    suit.layout:reset(20, 90)
 
     -- put an input widget at the layout origin, with a cell size of 200 by 30 pixels
-    suit.Input(input, suit.layout:row(200,30))
+    suit.Input(input, suit.layout:row(50, 20))
 
     -- put a label that displays the text below the first cell
     -- the cell size is the same as the last one (200x30 px)
     -- the label text will be aligned to the left
-    suit.Label("Health"..player.health..input.text, {align = "left"}, suit.layout:row())
+    --suit.Label("Health: " .. player.health .. input.text, {align = "left"}, suit.layout:row())
 
     -- put an empty cell that has the same size as the last cell (200x30 px)
     suit.layout:row()
 
     -- put a button of size 200x30 px in the cell below
     -- if the button is pressed, quit the game
-    if suit.Button("Close", suit.layout:row()).hit then
-        love.event.quit()
-    end
 
     if t < shakeDuration then
         t = t + dt
@@ -103,7 +130,7 @@ function love.update(dt)
     player:update(dt, kybrd)
     local curGun = player:getGun()
 
-    if curGun:shouldShoot(mouse) then
+    if curGun:shouldShoot(mouse) and not player:isDead() then
         local translateX, translateY = getTranslate()
         bulletCount = (bulletCount + 1) % 10000
 
@@ -161,6 +188,7 @@ end
 function love.draw()
     love.graphics.clear()
     love.graphics.reset()
+    shakeScreen()
 
     -- screen bounds in world space
     local minBoundX = math.floor(player.body:getX() - love.graphics:getWidth() / 2 - mapgen.cellsize)
@@ -168,26 +196,52 @@ function love.draw()
     local maxBoundX = math.floor(player.body:getX() + love.graphics:getWidth() / 2 + mapgen.cellsize)
     local maxBoundY = math.floor(player.body:getY() + love.graphics:getHeight() / 2  + mapgen.cellsize)
 
-    -- move according to player
+    -- translate to world space
     love.graphics.translate(getTranslate())
     -- draw the world
     drawWorld(minBoundX, minBoundY, maxBoundX, maxBoundY)
     -- draw the bullets
     drawBullets(minBoundX, minBoundY, maxBoundX, maxBoundY)
     -- shake the screen
-    suit.draw()
-    --shakeScreen()
 
     local headbody = player.body
     xH, yH = headbody:getPosition()
     xH = xH - love.graphics.getWidth() / 2
     yH = yH - love.graphics.getHeight() / 2
     -- draw enemies
-    for i=1,NUM_ENEMIES do
+    for i = 1, NUM_ENEMIES do
         objects.enemies[i]:draw(xH, yH)
     end
 
     player:draw()
+
+    -- translate back to screen space
+    love.graphics.translate(player.body:getX() - love.graphics:getWidth()/2, player.body:getY() - love.graphics:getHeight()/2)
+
+    -- print health hearts
+    for i = 1, math.floor(player.health / 10) do
+        love.graphics.draw(hearts[i], 32 * i, 30)
+    end
+    printFPS() -- print fps counter
+
+    suit.draw() -- print gui
+
+    -- player died event
+    if player:isDead() then
+        player.velocity = 0
+        font = love.graphics.newFont(200)
+        love.graphics.setFont(font)
+        wasted = "WASTED" -- text on death
+        love.graphics.print(wasted, (love.graphics.getWidth() / 2) - font:getWidth(wasted) / 2, (love.graphics.getHeight() / 2) - font:getHeight(wasted) / 2)
+    end
+end
+
+-- print FPS
+function printFPS()
+    font = love.graphics.newFont(14)
+    love.graphics.setFont(font)
+
+    love.graphics.print("FPS: " .. tostring(love.timer.getFPS()), 5, 5)
 end
 
 function initializePlayer(playerContainer, playerX, playerY)
@@ -282,37 +336,37 @@ end
 function beginContact(a, b, coll)
     -- update number of times a bullet touched
     if tonumber(b:getUserData()) ~= nil then
-	bulletCollision(a, b)
+        bulletCollision(a, b)
     elseif tonumber(a:getUserData()) ~= nil then
-	bulletCollision(b, a)
+        bulletCollision(b, a)
     end
 
     if isEnemy(a) then
         if isPlayer(b) then
-	    player:takeDamage(objects.enemies[getIndex(a)].strength)
-	end
+            player:takeDamage(objects.enemies[getIndex(a)].strength)
+        end
     elseif isEnemy(b) then
-	if isPlayer(a) then
-	    player:takeDamage(objects.enemies[getIndex(b)].strength)
+        if isPlayer(a) then
+            player:takeDamage(objects.enemies[getIndex(b)].strength)
         end
     end
 end
 
 function bulletCollision(a, b)
     -- update number of times a bullet touched
-        if string.sub(a:getUserData(), 1, 5) == "enemy" then
-            -- delete the enemy
-            local idx = tonumber(string.sub(a:getUserData(), 6))
-            objects.bulletTouching[b:getUserData()] = player:getGun().maxCollisions + 1
-	    if objects.enemies[idx].hp < 0 then
-            	objects.enemies[idx]:destroy()
-	    else
-		objects.enemies[idx]:takeDamage(20)
-	    end
+    if string.sub(a:getUserData(), 1, 5) == "enemy" then
+        -- delete the enemy
+        local idx = tonumber(string.sub(a:getUserData(), 6))
+        objects.bulletTouching[b:getUserData()] = player:getGun().maxCollisions + 1
+        if objects.enemies[idx].hp < 0 then
+            objects.enemies[idx]:destroy()
         else
-            -- bounce off wall
-            objects.bulletTouching[b:getUserData()] = objects.bulletTouching[b:getUserData()] + 1
+            objects.enemies[idx]:takeDamage(20)
         end
+    else
+        -- bounce off wall
+        objects.bulletTouching[b:getUserData()] = objects.bulletTouching[b:getUserData()] + 1
+    end
 end
 
 function isEnemy(fixture)
@@ -343,8 +397,8 @@ end
 
 -- shakes the screen
 function shakeScreen()
-    if t < shakeDuration and #objects.bullets > 1 then -- if we bullets exist
-        startShake(0.5, 100) -- shak    if t < shakeDuration then -- if duration not passed
+    if #objects.bullets > 0 then -- if we bullets exist
+        startShake(0.05, 1.5) -- shak    if t < shakeDuration then -- if duration not passed
         local dx = love.math.random(-shakeMagnitude, shakeMagnitude) -- shake randomly
         local dy = love.math.random(-shakeMagnitude, shakeMagnitude)
         love.graphics.translate(dx, dy) -- move the camera
@@ -376,7 +430,7 @@ function createEnemies()
     Enemy = require("enemy")
     objects.enemies = {}
 
-    for i = 1,NUM_ENEMIES do
+    for i = 1, NUM_ENEMIES do
         -- declare spawnpoints
         local spawnX
         local spawnY
@@ -401,4 +455,3 @@ function createEnemies()
         enemy_counter = enemy_counter + 1
     end
 end
-
