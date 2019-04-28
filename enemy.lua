@@ -16,7 +16,7 @@ function Enemy:new(index, startX, startY, size, speed, world)
     this.yOff = startY
 
     -- stats
-    this.hp = 100
+    this.hp = 30
     this.size = size
     this.speed = speed
     this.alive = true
