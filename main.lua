@@ -109,8 +109,8 @@ function love.update(dt)
 
         local bullet = curGun:shoot(player.body,
         player.shape:getRadius(),
-        mouse:getX() + math.abs(translateX),
-        mouse:getY() + math.abs(translateY))
+        mouse:getX(), --+ math.abs(translateX)
+        mouse:getY()) --+ math.abs(translateY)
 
         bullet.f:setUserData(tostring(bulletCount))
         objects.bulletTouching[tostring(bulletCount)] = 0
