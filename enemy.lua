@@ -39,14 +39,11 @@ function Enemy:new(startX, startY, size, speed, world)
 end
 
 function Enemy:draw()
-	--local x = self.x - head_x
-	--local y = self.y - head_y
 	love.graphics.setColor(1,0,0)
 	love.graphics.circle("fill", self.body:getX(), self.body:getY(), self.shape:getRadius())
 end
 
-function Enemy:update(head_x, head_y)
-	--[[
+function Enemy:update()
 	xDiff = 0
 	yDiff = 0
 	if self.goH then
@@ -64,15 +61,17 @@ function Enemy:update(head_x, head_y)
 	end
 	xDiff = xDiff * self.speed
 	yDiff = yDiff * self.speed
-	xDiff = 0
-	yDiff = 0
 	self.xOff = self.xOff + xDiff
 	self.yOff = self.yOff + yDiff
-	]]--
+
+
 	self.x = self.xOff
 	self.y = self.yOff
-	self.body:setX(self.xOff - head_x)
-	self.body:setY(self.yOff - head_y)
+
+	self.body:setLinearVelocity(xDiff, yDiff)
+
+	--self.body:setX(self.x)
+	--self.body:setY(self.y)
 end
 
 return Enemy

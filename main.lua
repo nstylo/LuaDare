@@ -34,13 +34,13 @@ function love.load()
     -- create enemies
     Enemy = require("enemy")
     objects.enemies = {}
-    for i=1,3 do
+    for i=1,10 do
 	    print("enemy"..i)
-	    local myX = math.random(centre_map_x - 500, centre_map_x + 500)
-	    local myY = math.random(centre_map_y - 500, centre_map_y + 500)
+	    local myX = math.random(centre_map_x, centre_map_x + 1000)
+	    local myY = math.random(centre_map_y - 500, centre_map_y + 1000)
 	    print(myX.." "..myY)
 	    --objects.enemies[i] = Enemy:new(1, 2, 3, 4)
-	    objects.enemies[i] = Enemy:new(myX, myY, 32, 500, world)
+	    objects.enemies[i] = Enemy:new(myX, myY, 16, 500, world)
     end
 
     -- load textures
@@ -82,7 +82,7 @@ function love.update(dt)
     -- dont rotate the player
     headbody:setAngularVelocity(0)
 
-    for i=1,3 do
+    for i=1,10 do
 	    objects.enemies[i]:update(head_x, head_y)
     end
 
@@ -131,7 +131,7 @@ function love.draw()
     xH = xH - love.graphics.getWidth() / 2
     yH = yH - love.graphics.getHeight() / 2
     -- draw enemies
-    for i=1,3 do
+    for i=1,10 do
 	    objects.enemies[i]:draw(xH, yH)
     end
 
