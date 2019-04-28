@@ -21,7 +21,7 @@ function love.load()
     love.physics.setMeter(64)
     world = love.physics.newWorld(0, 0, true)
     world:setCallbacks(beginContact, endContact, preSolve, postSolve)
-    t, shakeDuration, shakeMagnitude = 0, -1, 0 -- initialization for camera shaking parameters
+    t, shakeDuration, shakeMagnitude = 0, 1, 0 -- initialization for camera shaking parameters
 
     -- Generate map
     MapGenerator = require("MapGenerator")
@@ -161,6 +161,7 @@ end
 function love.draw()
     love.graphics.clear()
     love.graphics.reset()
+    shakeScreen()
 
     -- screen bounds in world space
     local minBoundX = math.floor(player.body:getX() - love.graphics:getWidth() / 2 - mapgen.cellsize)
@@ -176,7 +177,6 @@ function love.draw()
     drawBullets(minBoundX, minBoundY, maxBoundX, maxBoundY)
     -- shake the screen
     suit.draw()
-    --shakeScreen()
 
     local headbody = player.body
     xH, yH = headbody:getPosition()
@@ -343,8 +343,8 @@ end
 
 -- shakes the screen
 function shakeScreen()
-    if t < shakeDuration and #objects.bullets > 1 then -- if we bullets exist
-        startShake(0.5, 100) -- shak    if t < shakeDuration then -- if duration not passed
+    if #objects.bullets > 0 then -- if we bullets exist
+        startShake(0.05, 1.5) -- shak    if t < shakeDuration then -- if duration not passed
         local dx = love.math.random(-shakeMagnitude, shakeMagnitude) -- shake randomly
         local dy = love.math.random(-shakeMagnitude, shakeMagnitude)
         love.graphics.translate(dx, dy) -- move the camera
@@ -401,4 +401,3 @@ function createEnemies()
         enemy_counter = enemy_counter + 1
     end
 end
-
