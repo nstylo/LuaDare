@@ -1,106 +1,136 @@
---! file: player.lua
-velocity = 500
-bullet_speed = 5
-bullet_force = 50
-body_pushback = 10
+-- player class
+
+-- class Player
+
+local Player = {}
+local metatable ={__index = Player}
 
 up = "w"
 down = "s"
 left = "a"
 right = "d"
-shooot = 1
 
-function setControls(_up, _down, _left, _right, _shoot)
+-- param velocity: speed of the player
+-- param startingGun: starting gun
+-- param health: starting health
+-- param world: the love2d world of the player
+-- param startX,startY: world space starting coordinates
+function Player:new(velocity, startingGun, startX, startY, health, world, texture_path)
+    local this = {}
+
+    this.velocity = velocity
+    this.gun = startingGun
+    this.health = health
+    this.texture = love.graphics.newImage(texture_path)
+
+    -- set physics parameter
+    this.body = love.physics.newBody(world, startX, startX, "dynamic")
+    this.body:setMass(1)
+    this.body:setAngularVelocity(0)
+    this.shape = love.physics.newCircleShape(10)
+    this.fixture = love.physics.newFixture(this.body, this.shape)
+    this.fixture:setUserData("player")
+    this.fixture:setRestitution(0)
+
+    return setmetatable(this, metatable)
+end
+
+-- gives the gun to a player
+-- param newGun: gun to give to the player
+function Player:giveGun(newGun)
+    -- TODO: support multiple guns
+    self.gun = newGun
+end
+
+function Player:isDead()
+    return self.health <= 0
+end
+
+
+-- getter for the gun
+function Player:getGun()
+    -- TODO: support multiple guns
+    return self.gun
+end
+
+-- decrease health of player
+function Player:takeDamage(dmg)
+    self.health = self.health - dmg
+end
+
+-- change the controls of the players, must be keyboard
+function Player:setControls(_up, _down, _left, _right)
     up = _up
     down = _down
     left = _left
     right = _right
-    shooot = _shoot
 end
 
-function setPlayerVelocity(vel)
-    velocity = vel
+-- change the velocity of the player
+function Player:setPlayerVelocity(vel)
+    self.velocity = vel
 end
 
-function getPlayerVelocity(cur_vel_x, cur_vel_y, kybrd)
-    y_changed = false
-    x_changed = false
-    x_velocity = cur_vel_x
-    y_velocity = cur_vel_y
+-- calculates the velocity according to the previous velocity
+-- and the keyboard presses
+-- param currentVelX: current linear velocity on x axis
+-- similarly for currentVelY
+-- param kybrd: love2d keyboard object
+function Player:getLinearPlayerVelocity(currentVelX, currentVelY, kybrd)
+    changedY = false
+    changedX = false
+    velocityX = currentVelX
+    velocityY = currentVelY
 
     if kybrd.isDown(up) then
-        y_changed = true
-        y_velocity = -1 * velocity
+        changedY = true
+        velocityY = -1 * self.velocity
     else
-        x_velocity = cur_vel_x
-        y_velocity = 0
+        velocityX = currentVelX
+        velocityY = 0
     end
 
     if  kybrd.isDown(down) then
-        x_velocity = cur_vel_x
-        y_velocity = velocity
-    elseif not y_changed then
-        x_velocity = cur_vel_x
-        y_velocity = 0
+        velocityX = currentVelX
+        velocityY = self.velocity
+    elseif not changedY then
+        velocityX = currentVelX
+        velocityY = 0
     end
 
-    cur_vel_x, cur_vel_y = x_velocity, y_velocity
+    currentVelX, currentVelY = velocityX, velocityY
 
     if  kybrd.isDown(left) then
-        x_velocity = -1 * velocity
-        y_velocity = cur_vel_y
-        x_changed = true
+        velocityX = -1 * self.velocity
+        velocityY = currentVelY
+        changedX = true
     else
-        x_velocity = 0
-        y_velocity = cur_vel_y
+        velocityX = 0
+        velocityY = currentVelY
     end
 
     if kybrd.isDown(right) then
-        x_velocity = velocity
-        y_velocity = cur_vel_y
-    elseif not x_changed then
-        x_velocity = 0
-        y_velocity = cur_vel_y
+        velocityX = self.velocity
+        velocityY = currentVelY
+    elseif not changedX then
+        velocityX = 0
+        velocityY = currentVelY
     end
 
-    return x_velocity, y_velocity
+    return velocityX, velocityY
 end
 
-function getPlayerAngle(mouse, head)
-    return -1.5 + math.atan2(mouse:getY() - head:getY(), mouse:getX() - head:getX())
+function Player:draw()
+    --love.graphics.setColor(1, 1, 1)
+    --love.graphics.circle("fill", self.body:getX() , self.body:getY(), self.shape:getRadius())
+    love.graphics.draw(self.texture, self.body:getX() - self.texture:getWidth() / 2, self.body:getY() - self.texture:getWidth() / 2)
 end
 
-function shouldShoot(mouse)
-    return mouse.isDown(shooot)
+function Player:update(dt, kybrd)
+    local currentVelX, currentVelY = self.body:getLinearVelocity()
+    -- update velocity
+    self.body:setLinearVelocity(self:getLinearPlayerVelocity(currentVelX, currentVelY, kybrd))
+    self.body:setAngularVelocity(0)
 end
 
-function setBulletProperties(force, speed, pushback)
-    bullet_speed = speed
-    bullet_force = force
-    body_pushback = pushback
-end
-
-function shoot(head, translate_x, translate_y, head_radius, mouse, bullet)
-    -- how far away the bullet should spawn
-    bullet_distance = head_radius + 3
-    -- position of head and mouse
-    head_x, head_y = head:getPosition()
-    mouse_x, mouse_y = mouse:getPosition()
-    mouse_x = mouse_x + math.abs(translate_x)
-    mouse_y = mouse_y + math.abs(translate_y)
-    -- vector coords to mouse
-    to_mouse_x = mouse_x - head_x
-    to_mouse_y = mouse_y - head_y
-    -- vectors second norm
-    second_norm = math.sqrt(to_mouse_x * to_mouse_x + to_mouse_y * to_mouse_y)
-    -- normalize this vector
-    to_mouse_x = to_mouse_x / second_norm
-    to_mouse_y = to_mouse_y / second_norm
-    -- transfer bullet accross this vector by distance of radius
-    bullet:setX(head_x + to_mouse_x * bullet_distance)
-    bullet:setY(head_y + to_mouse_y * bullet_distance)
-    -- apply forces and speed to the bullet
-    bullet:applyForce(to_mouse_x * bullet_force,  to_mouse_y * bullet_force)
-    bullet:setLinearVelocity(to_mouse_x * bullet_force,  to_mouse_y * bullet_force)
-    bullet:setActive(true)
-end
+return Player
