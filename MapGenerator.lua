@@ -10,8 +10,10 @@ local metatable = { __index = MapGenerator}
 function MapGenerator:new(sizeX, sizeY, numWalkers, cellsize)
     -- return new object
     local this = {}
-    math.randomseed(os.time())
-
+    time = os.time()
+    math.randomseed(time)
+    print(time)
+    
     -- assign dimensions
     this.sizeX = sizeX
     this.sizeY = sizeY

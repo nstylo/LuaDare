@@ -2,7 +2,7 @@
 local Enemy = {}
 local metatable = { __index = Enemy }
 
-function Enemy:new(index, startX, startY, size, speed, world)
+function Enemy:new(index, startX, startY, size, speed, world, strength, texture)
     local this = {}
 
     -- unique ID
@@ -15,11 +15,15 @@ function Enemy:new(index, startX, startY, size, speed, world)
     this.xOff = startX
     this.yOff = startY
 
+    -- texture
+    this.texture = love.graphics.newImage(texture)
+
     -- stats
-    this.hp = 1
+    this.hp = 30
     this.size = size
     this.speed = speed
     this.alive = true
+    this.strength = strength
 
     -- setup physics shit
     this.body = love.physics.newBody(world, startX, startY, "dynamic")
@@ -34,9 +38,12 @@ function Enemy:new(index, startX, startY, size, speed, world)
 end
 
 function Enemy:draw()
+    --love.graphics.draw(texture, math.floor(objects.static[i].body:getX() - mapgen.cellsize / 2), math.floor(objects.static[i].body:getY() - mapgen.cellsize / 2))
     if self.alive then
-        love.graphics.setColor(1,0,0)
-        love.graphics.circle("fill", self.body:getX(), self.body:getY(), self.shape:getRadius())
+        --love.graphics.setColor(1,0,0)
+        --love.graphics.circle("fill", self.body:getX(), self.body:getY(), self.shape:getRadius())
+	love.graphics.setColor(1,1,1)
+	love.graphics.draw(self.texture, self.body:getX() - 32, self.body:getY() - 32)
     end
 end
 
@@ -88,6 +95,10 @@ end
 
 function Enemy:getIndex()
     return self.index
+end
+
+function Enemy:takeDamage(damage)
+    self.hp = self.hp - damage
 end
 
 function Enemy:destroy()
