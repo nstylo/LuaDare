@@ -41,7 +41,7 @@ function love.load()
     }
 
     colorTest = {244, 219, 0}
-    tmpGun = GunCreator:new(0.3, 0.5, 9, 13, "assets/sounds/gun_fire.wav", tmpGun_bullet_creator, colorTest, 1)
+    tmpGun = GunCreator:new(0.3, 0.5, 15, 13, "assets/sounds/gun_fire.wav", tmpGun_bullet_creator, colorTest, 1)
 
     objects = {}
     -- stores objects to draw and physics
@@ -90,6 +90,8 @@ function love.load()
     musicTrack:setLooping(true)
     musicTrack:play()
 
+    shoot = false
+
     -- local int = 1
     -- for key, spawnpoint in pairs(mapgen:spawnEnemies(5, 5)) do
     --     print(int)
@@ -119,8 +121,13 @@ function roundIsOver()
 end
 
 function love.update(dt)
+    shoot = false
     if player:isDead() then
         dt = dt / 16
+    end
+
+    if t < shakeDuration then
+        t = t + dt
     end
 
     roundIsOver()
@@ -143,19 +150,14 @@ function love.update(dt)
     -- put an empty cell that has the same size as the last cell (200x30 px)
     suit.layout:row()
 
-    -- put a button of size 200x30 px in the cell below
-    -- if the button is pressed, quit the game
-
-    if t < shakeDuration then
-        t = t + dt
-    end
-
     local kybrd = love.keyboard -- keyboard object
     mouse = love.mouse
     player:update(dt, kybrd)
     local curGun = player:getGun()
 
     if curGun:shouldShoot(mouse) and not player:isDead() then
+        t = 0
+        shoot = true
         local translateX, translateY = getTranslate()
         bulletCount = (bulletCount + 1) % 10000
 
@@ -339,7 +341,7 @@ function drawWorld(minBoundX, minBoundY, maxBoundX, maxBoundY)
 end
 
 function startShake(duration, magnitude)
-    t, shakeDuration, shakeMagnitude = 0, duration or 1, magnitude or 5
+    t, shakeDuration, shakeMagnitude = 0, duration or 0.001, magnitude or 1
 end
 
 -- collision callbacks
@@ -407,8 +409,8 @@ end
 
 -- shakes the screen
 function shakeScreen()
-    if #objects.bullets > 0 then -- if we bullets exist
-        startShake(0.01, 2) -- shak    if t < shakeDuration then -- if duration not passed
+    if  t < shakeDuration and shoot then -- if we bullets exist
+        startShake(1, 5) -- shak    if t < shakeDuration then -- if duration not passed
         local dx = love.math.random(-shakeMagnitude, shakeMagnitude) -- shake randomly
         local dy = love.math.random(-shakeMagnitude, shakeMagnitude)
         love.graphics.translate(dx, dy) -- move the camera
