@@ -17,7 +17,7 @@ function love.load()
     -- player constants
     local PLAYER_VELOCITY = 200
     local HEALTH = 100
-    NUM_ENEMIES = 10
+    NUM_ENEMIES = 3
 
     roundOver = false
 
@@ -42,10 +42,7 @@ function love.load()
     }
 
     colorTest = {244, 219, 0}
-    tmpGun = GunCreator:new(0.3, 0.5, 9, 13, "assets/sounds/gun_fire.wav", tmpGun_bullet_creator, colorTest, 1)
-
-    PlayerCreator = require("player")
-    player = PlayerCreator:new(PLAYER_VELOCITY, tmpGun, mapCenterX, mapCenterY, HEALTH, world)
+    tmpGun = GunCreator:new(0.3, 0.5, 15, 13, "assets/sounds/gun_fire.wav", tmpGun_bullet_creator, colorTest, 1)
 
     objects = {}
     -- stores objects to draw and physics
@@ -57,15 +54,20 @@ function love.load()
     objects.bulletTouching = {} -- number of times a bullet touches an object [bullet.f:getUserData()] = #times_touched
     bulletCount = 0 -- amount of bullets
 
-    -- create enemies
-    createEnemies()
-
     -- load textures
     wall = love.graphics.newImage("/assets/bricks/bricks_0.png")
     rock = love.graphics.newImage("/assets/rock texture.png")
     rock2 = love.graphics.newImage("/assets/brick texture 2.png")
     brick = love.graphics.newImage("/assets/brick texture.png")
     dirt = love.graphics.newImage("/assets/dirt1.jpg")
+    enemy_path = "assets/sprites/ducknew.png"
+    player_path = "assets/sprites/defaulthumannew.png"
+
+    PlayerCreator = require("player")
+    player = PlayerCreator:new(PLAYER_VELOCITY, tmpGun, mapCenterX, mapCenterY, HEALTH, world, player_path)
+
+    -- create enemies
+    createEnemies()
 
     hearts = {}
     for i = 1, math.floor(player.health / 10) do
@@ -75,6 +77,8 @@ function love.load()
     musicTrack = love.audio.newSource("/assets/sounds/track.mp3", "static")
     musicTrack:setLooping(true)
     musicTrack:play()
+
+    shot = false
 end
 
 function roundIsOver()
@@ -94,8 +98,13 @@ function roundIsOver()
 end
 
 function love.update(dt)
+    shoot = false
     if player:isDead() then
         dt = dt / 16
+    end
+
+    if t < shakeDuration then
+        t = t + dt
     end
 
     roundIsOver()
@@ -118,19 +127,14 @@ function love.update(dt)
     -- put an empty cell that has the same size as the last cell (200x30 px)
     suit.layout:row()
 
-    -- put a button of size 200x30 px in the cell below
-    -- if the button is pressed, quit the game
-
-    if t < shakeDuration then
-        t = t + dt
-    end
-
     local kybrd = love.keyboard -- keyboard object
     mouse = love.mouse
     player:update(dt, kybrd)
     local curGun = player:getGun()
 
     if curGun:shouldShoot(mouse) and not player:isDead() then
+        t = 0
+        shoot = true
         local translateX, translateY = getTranslate()
         bulletCount = (bulletCount + 1) % 10000
 
@@ -208,6 +212,7 @@ function love.draw()
     xH, yH = headbody:getPosition()
     xH = xH - love.graphics.getWidth() / 2
     yH = yH - love.graphics.getHeight() / 2
+
     -- draw enemies
     for i = 1, NUM_ENEMIES do
         objects.enemies[i]:draw(xH, yH)
@@ -313,23 +318,7 @@ function drawWorld(minBoundX, minBoundY, maxBoundX, maxBoundY)
 end
 
 function startShake(duration, magnitude)
-    t, shakeDuration, shakeMagnitude = 0, duration or 1, magnitude or 5
-end
-
--- adds a bullet to the bullet array: objects.bullets
-function addBullet(name)
-    bullet = {}
-    objects.bulletTouching[name] = 0
-    -- dynamic bullet at whatever coordinates
-    bullet.b = love.physics.newBody(world, 10, 10, "dynamic")
-    bullet.s = love.physics.newCircleShape(objects.head.shape:getRadius() * 0.5) -- shape of the bullet
-    bullet.f = love.physics.newFixture(bullet.b,bullet.s) -- add physics
-    bullet.f:setRestitution(0.2) -- determine how bouncy this be
-    bullet.f:setUserData(name) -- unique id of the bullet
-    bullet.b:setActive(false)
-    bullet.b:setBullet(true)
-    bullet.touched = 0
-    table.insert(objects.bullets, bullet)
+    t, shakeDuration, shakeMagnitude = 0, duration or 0.001, magnitude or 1
 end
 
 -- collision callbacks
@@ -397,8 +386,8 @@ end
 
 -- shakes the screen
 function shakeScreen()
-    if #objects.bullets > 0 then -- if we bullets exist
-        startShake(0.05, 1.5) -- shak    if t < shakeDuration then -- if duration not passed
+    if  t < shakeDuration and shoot then -- if we bullets exist
+        startShake(1, 5) -- shak    if t < shakeDuration then -- if duration not passed
         local dx = love.math.random(-shakeMagnitude, shakeMagnitude) -- shake randomly
         local dy = love.math.random(-shakeMagnitude, shakeMagnitude)
         love.graphics.translate(dx, dy) -- move the camera
@@ -451,7 +440,7 @@ function createEnemies()
         spawnY = ((spawnY - 1) * mapgen.cellsize) + (mapgen.cellsize / 2)
 
         -- set enemies
-        objects.enemies[i] = Enemy:new(enemy_counter, spawnX, spawnY, 32, 300, world, 5)
+        objects.enemies[i] = Enemy:new(enemy_counter, spawnX, spawnY, 32, 300, world, 5, enemy_path)
         enemy_counter = enemy_counter + 1
     end
 end

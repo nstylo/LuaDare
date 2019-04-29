@@ -4,7 +4,6 @@
 
 local Player = {}
 local metatable ={__index = Player}
-velocity = 200
 
 up = "w"
 down = "s"
@@ -16,12 +15,13 @@ right = "d"
 -- param health: starting health
 -- param world: the love2d world of the player
 -- param startX,startY: world space starting coordinates
-function Player:new(velocity, startingGun, startX, startY, health, world)
+function Player:new(velocity, startingGun, startX, startY, health, world, texture_path)
     local this = {}
 
     this.velocity = velocity
     this.gun = startingGun
     this.health = health
+    this.texture = love.graphics.newImage(texture_path)
 
     -- set physics parameter
     this.body = love.physics.newBody(world, startX, startX, "dynamic")
@@ -84,7 +84,7 @@ function Player:getLinearPlayerVelocity(currentVelX, currentVelY, kybrd)
 
     if kybrd.isDown(up) then
         changedY = true
-        velocityY = -1 * velocity
+        velocityY = -1 * self.velocity
     else
         velocityX = currentVelX
         velocityY = 0
@@ -92,7 +92,7 @@ function Player:getLinearPlayerVelocity(currentVelX, currentVelY, kybrd)
 
     if  kybrd.isDown(down) then
         velocityX = currentVelX
-        velocityY = velocity
+        velocityY = self.velocity
     elseif not changedY then
         velocityX = currentVelX
         velocityY = 0
@@ -101,7 +101,7 @@ function Player:getLinearPlayerVelocity(currentVelX, currentVelY, kybrd)
     currentVelX, currentVelY = velocityX, velocityY
 
     if  kybrd.isDown(left) then
-        velocityX = -1 * velocity
+        velocityX = -1 * self.velocity
         velocityY = currentVelY
         changedX = true
     else
@@ -110,7 +110,7 @@ function Player:getLinearPlayerVelocity(currentVelX, currentVelY, kybrd)
     end
 
     if kybrd.isDown(right) then
-        velocityX = velocity
+        velocityX = self.velocity
         velocityY = currentVelY
     elseif not changedX then
         velocityX = 0
@@ -121,8 +121,9 @@ function Player:getLinearPlayerVelocity(currentVelX, currentVelY, kybrd)
 end
 
 function Player:draw()
-    love.graphics.setColor(1, 1, 1)
-    love.graphics.circle("fill", self.body:getX() , self.body:getY(), self.shape:getRadius())
+    --love.graphics.setColor(1, 1, 1)
+    --love.graphics.circle("fill", self.body:getX() , self.body:getY(), self.shape:getRadius())
+    love.graphics.draw(self.texture, self.body:getX() - self.texture:getWidth() / 2, self.body:getY() - self.texture:getWidth() / 2)
 end
 
 function Player:update(dt, kybrd)
