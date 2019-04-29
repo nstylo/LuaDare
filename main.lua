@@ -42,7 +42,7 @@ function love.load()
     }
 
     colorTest = {244, 219, 0}
-    tmpGun = GunCreator:new(0.3, 0.5, 9, 13, "assets/sounds/gun_fire.wav", tmpGun_bullet_creator, colorTest, 1)
+    tmpGun = GunCreator:new(0.3, 0.5, 9, 13, "assets/sounds/gun_fire.wav", tmpGun_bullet_creator, colorTest, 2)
 
     PlayerCreator = require("player")
     player = PlayerCreator:new(PLAYER_VELOCITY, tmpGun, mapCenterX, mapCenterY, HEALTH, world)
@@ -381,7 +381,7 @@ end
 
 -- shakes the screen
 function shakeScreen()
-    if #objects.bullets > 0 then -- if we bullets exist
+    if t > shakeDuration and #objects.bullets > 0 then -- if we bullets exist
         startShake(0.01, 2) -- shak    if t < shakeDuration then -- if duration not passed
         local dx = love.math.random(-shakeMagnitude, shakeMagnitude) -- shake randomly
         local dy = love.math.random(-shakeMagnitude, shakeMagnitude)
