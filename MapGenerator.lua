@@ -80,18 +80,18 @@ end
 
 -- generate the map i.e. init the grid algorithmically
 function MapGenerator:doDrunkardsMove(w)
-    -- TODO: drunkards walk
     rand = math.random(1, 4) -- generate random number [1, 4]
 
     walker = self.walkers[w] -- walker we're working with
+    self.grid[walker.x][walker.y] = 1
 
-    if walker.y ~= self.thickness and rand == 1 then -- north
+    if walker.y ~= self.thickness + 1 and rand == 1 then -- north
         walker.y = walker.y - 1
-    elseif walker.y ~= self.sizeY - self.thickness and rand == 2 then -- south
+    elseif walker.y ~= self.sizeY - self.thickness - 1 and rand == 2 then -- south
         walker.y = walker.y + 1
-    elseif walker.x ~= self.sizeX - self.thickness and rand == 3 then -- east
+    elseif walker.x ~= self.sizeX - self.thickness - 1 and rand == 3 then -- east
         walker.x = walker.x + 1
-    elseif walker.x ~= self.thickness and rand == 4 then -- west
+    elseif walker.x ~= self.thickness + 1 and rand == 4 then -- west
         walker.x = walker.x - 1
     end
 
@@ -126,6 +126,7 @@ function MapGenerator:addWalker()
             -- Set new walker's x and y coords to i walker's
             walker.x = self.walkers[i].x
             walker.y = self.walkers[i].y
+            self.grid[walker.x][walker.y] = 1
             table.insert(self.walkers, walker) -- insert the new walker
         end
     end
