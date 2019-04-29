@@ -13,7 +13,6 @@ function love.load()
     -- player constants
     local PLAYER_VELOCITY = 200
     local HEALTH = 100
-    NUM_ENEMIES = 10
 
     love.physics.setMeter(64)
     world = love.physics.newWorld(0, 0, true)
@@ -22,7 +21,7 @@ function love.load()
 
     -- Generate map
     MapGenerator = require("MapGenerator")
-    mapgen = MapGenerator:new(42, 42, 5, 64)
+    mapgen = MapGenerator:new(110, 110, 5, 64)
     mapgen:doDrunkardsWalk(0.2)
     mapgen:exportToFile("test.txt")
     -- centre of map
@@ -51,6 +50,16 @@ function love.load()
     objects.bulletTouching = {} -- number of times a bullet touches an object [bullet.f:getUserData()] = #times_touched
     bulletCount = 0 -- amount of bullets
 
+    -- compute enemy positions
+    enemy_pos = mapgen:spawnEnemies(10, 10)
+    NUM_ENEMIES = 0
+    for i = 1, #enemy_pos do
+        if enemy_pos[i].x and enemy_pos[i].y then
+            NUM_ENEMIES = NUM_ENEMIES + 1
+        end
+    end
+    print("NUM_ENEMIES: " .. NUM_ENEMIES)
+
     -- create enemies
     createEnemies()
 
@@ -64,6 +73,17 @@ function love.load()
     musicTrack = love.audio.newSource("/assets/sounds/track.mp3", "static")
     musicTrack:setLooping(true)
     musicTrack:play()
+
+    -- local int = 1
+    -- for key, spawnpoint in pairs(mapgen:spawnEnemies(5, 5)) do
+    --     print(int)
+    --     int = int + 1
+    --     if spawnpoint.i and spawnpoint.j then
+    --         print("i " .. spawnpoint.i)
+    --         print("j " .. spawnpoint.j)
+    --         print("value " .. spawnpoint.value)
+    --     end
+    -- end
 end
 
 function love.update(dt)
@@ -95,7 +115,7 @@ function love.update(dt)
 
     processBullets(curGun.speed)
 
-    for i = 1,NUM_ENEMIES do
+    for i = 1, NUM_ENEMIES do
         objects.enemies[i]:update(player.body:getX(), player.body:getY())
     end
 
@@ -144,7 +164,7 @@ function love.draw()
     xH = xH - love.graphics.getWidth() / 2
     yH = yH - love.graphics.getHeight() / 2
     -- draw enemies
-    for i=1,NUM_ENEMIES do
+    for i = 1, NUM_ENEMIES do
 	    objects.enemies[i]:draw(xH, yH)
     end
 
@@ -310,29 +330,21 @@ function createEnemies()
     Enemy = require("enemy")
     objects.enemies = {}
 
-    for i = 1,NUM_ENEMIES do
-        -- declare spawnpoints
-        local spawnX
-        local spawnY
+    for i = 1, #enemy_pos do
 
-        -- find valid spawnpositions
-        while true do
-            spawnX = math.random(1, mapgen.sizeX)
-            spawnY = math.random(1, mapgen.sizeY)
+        if enemy_pos[i].x and enemy_pos[i].y then
+            -- declare spawnpoints
+            local spawnX = enemy_pos[i].x
+            local spawnY = enemy_pos[i].y
 
-            -- if spawnpoint is a path then its a valid spawnpoint
-            if mapgen.grid[spawnX][spawnY] == 1 then
-                break
-            end
+            -- translate valid block to valid ws-coordinates
+            spawnX = ((spawnX - 1) * mapgen.cellsize) + (mapgen.cellsize / 2)
+            spawnY = ((spawnY - 1) * mapgen.cellsize) + (mapgen.cellsize / 2)
+
+            -- set enemies
+            objects.enemies[enemy_counter] = Enemy:new(enemy_counter, spawnX, spawnY, 32, 300, world)
+            enemy_counter = enemy_counter + 1
         end
-
-        -- translate valid block to valid ws-coordinates
-	    spawnX = ((spawnX - 1) * mapgen.cellsize) + (mapgen.cellsize / 2)
-	    spawnY = ((spawnY - 1) * mapgen.cellsize) + (mapgen.cellsize / 2)
-
-        -- set enemies
-	    objects.enemies[i] = Enemy:new(enemy_counter, spawnX, spawnY, 32, 300, world)
-	    enemy_counter = enemy_counter + 1
     end
 end
 

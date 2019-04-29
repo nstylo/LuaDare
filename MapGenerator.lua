@@ -197,4 +197,73 @@ function MapGenerator:doDrunkardsWalk(ratio)
     self:cleanupMap() -- clears standalone walls (without neighbors)
 end
 
+function MapGenerator:spawnEnemies(splitX, splitY)
+    -- reduce the map, ignore the indestructible walls 
+    local reducedX = self.sizeX - self.thickness * 2
+    local reducedY = self.sizeY - self.thickness * 2
+
+    -- define sector width
+    local sectorX = reducedX / splitX 
+    local sectorY = reducedY / splitY 
+
+    -- startpoints
+    local startX = self.thickness + 1
+    local startY = self.thickness + 1
+
+    -- list of all spawnpoints
+    local spawnpoints = {}
+    local index = 1
+
+    -- for each sector
+    for i = startX, reducedX + self.thickness, sectorX do
+        for j = startY, reducedY + self.thickness, sectorY do
+
+            -- create a new spawnpoint for this sector with indices and 'free' neighbour blocks
+            local spawnpoint = {}
+            -- print("Sector: " .. index)
+            spawnpoint.x = nil
+            spawnpoint.y = nil
+            spawnpoint.value = 0
+
+            -- for each block within sector
+            for k = i, i + sectorX - 1, 1 do
+                for l = j, j + sectorY - 1, 1 do
+
+                    -- if the block is a valid spawnpoint, else continue
+                    if self.grid[k][l] == 1 then
+                        -- number of free blocks
+                        local value = 0
+
+                        -- for each neighbour
+                        for n = k - 2, k + 2, 1 do
+                            for m = l - 2, l + 2, 1 do
+                                -- if not nil and a walking path increment count of free neighbouring blocks
+                                if self.grid[n][m] and (self.grid[n][m] == 1) then 
+                                    value = value + 1
+                                end
+                            end
+                        end
+
+                        -- print("value " .. value)
+                        -- print("spawn val " .. spawnpoint.value)
+                        -- let the block with the highest count be the spawningpoint
+                        if value >= spawnpoint.value then
+                            spawnpoint.value = value
+                            spawnpoint.x = k
+                            spawnpoint.y = l
+                        end
+                    end
+                end
+            end
+
+            -- add spawnpoint to output
+            spawnpoints[index] = spawnpoint
+            index = index + 1
+        end
+    end
+
+    return spawnpoints
+end
+
+
 return MapGenerator

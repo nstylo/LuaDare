@@ -4,7 +4,7 @@
 
 local Player = {}
 local metatable ={__index = Player}
-velocity = 200
+velocity = 400
 
 up = "w"
 down = "s"
