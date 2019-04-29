@@ -15,12 +15,13 @@ right = "d"
 -- param health: starting health
 -- param world: the love2d world of the player
 -- param startX,startY: world space starting coordinates
-function Player:new(velocity, startingGun, startX, startY, health, world)
+function Player:new(velocity, startingGun, startX, startY, health, world, texture_path)
     local this = {}
 
     this.velocity = velocity
     this.gun = startingGun
     this.health = health
+    this.texture = love.graphics.newImage(texture_path)
 
     -- set physics parameter
     this.body = love.physics.newBody(world, startX, startX, "dynamic")
@@ -120,8 +121,9 @@ function Player:getLinearPlayerVelocity(currentVelX, currentVelY, kybrd)
 end
 
 function Player:draw()
-    love.graphics.setColor(1, 1, 1)
-    love.graphics.circle("fill", self.body:getX() , self.body:getY(), self.shape:getRadius())
+    --love.graphics.setColor(1, 1, 1)
+    --love.graphics.circle("fill", self.body:getX() , self.body:getY(), self.shape:getRadius())
+    love.graphics.draw(self.texture, self.body:getX() - self.texture:getWidth() / 2, self.body:getY() - self.texture:getWidth() / 2)
 end
 
 function Player:update(dt, kybrd)
