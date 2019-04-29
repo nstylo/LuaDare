@@ -63,17 +63,17 @@ function love.load()
     end
     print("NUM_ENEMIES: " .. NUM_ENEMIES)
 
-    -- create enemies
-    createEnemies()
-
     -- load textures
     wall = love.graphics.newImage("/assets/bricks/bricks_0.png")
     rock = love.graphics.newImage("/assets/rock texture.png")
     rock2 = love.graphics.newImage("/assets/brick texture 2.png")
     brick = love.graphics.newImage("/assets/brick texture.png")
     dirt = love.graphics.newImage("/assets/dirt1.jpg")
-    enemy_path = "assets/sprites/ducknew.png"
-    player_path = "assets/sprites/defaulthumannew.png"
+    enemy_path = "/assets/sprites/ducknew.png"
+    player_path = "/assets/sprites/defaulthumannew.png"
+
+    -- create enemies
+    createEnemies()
 
     PlayerCreator = require("player")
     player = PlayerCreator:new(PLAYER_VELOCITY, tmpGun, mapCenterX, mapCenterY, HEALTH, world, player_path)
@@ -452,7 +452,7 @@ function createEnemies()
             spawnY = ((spawnY - 1) * mapgen.cellsize) + (mapgen.cellsize / 2)
 
             -- set enemies
-            objects.enemies[enemy_counter] = Enemy:new(enemy_counter, spawnX, spawnY, 32, 300, world)
+            objects.enemies[enemy_counter] = Enemy:new(enemy_counter, spawnX, spawnY, 32, 300, world, 5, enemy_path)
             enemy_counter = enemy_counter + 1
         end
     end
